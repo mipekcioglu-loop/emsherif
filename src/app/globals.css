@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+/*
+ * Brand tokens. Defined once here and exposed to Tailwind through @theme so
+ * components use semantic names (bg-burgundy, text-gold) instead of hex values.
+ */
+@theme {
+  --color-burgundy: #4a1416;
+  --color-burgundy-light: #6d2326;
+  --color-gold: #c6a45c;
+  --color-gold-light: #e0c88f;
+  --color-cream: #f7f2e8;
+  --color-ink: #1c1412;
+
+  /* The --font-* sources are injected by next/font in app/layout.tsx. */
+  --font-display: var(--font-cormorant), "Times New Roman", serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --tracking-brand: 0.28em;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 300;
+  }
+
+  ::selection {
+    background-color: var(--color-gold);
+    color: var(--color-burgundy);
+  }
+}
+
+@layer components {
+  /* Small caps label used above section headings throughout the site. */
+  .eyebrow {
+    font-size: 0.6875rem;
+    letter-spacing: var(--tracking-brand);
+    text-transform: uppercase;
+  }
+}
