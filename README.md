@@ -3,6 +3,8 @@
 The digital menu for Em Sherif Café Erbil, in English, Kurdish and Arabic.
 Rebuilt from the previous static site as a Next.js app.
 
+**Live: https://mipekcioglu-loop.github.io/emsherif/**
+
 ## Stack
 
 | Concern   | Choice                                      |
@@ -150,6 +152,25 @@ a faint box against the page.
 
 ## Deployment
 
-Any Node host works, and `output: "export"` would also produce a plain static
-bundle. Set `NEXT_PUBLIC_SITE_URL` in the hosting provider before the first
-deploy so canonical URLs and the sitemap are right.
+Every push to `main` publishes to GitHub Pages via
+`.github/workflows/pages.yml`. There is nothing to run by hand; a deploy takes
+about 40 seconds.
+
+Pages serves the site from a repository subpath, so that build sets
+`STATIC_EXPORT=true`, which switches `next.config.ts` to a static export with
+`basePath` and unoptimized images. `NEXT_PUBLIC_BASE_PATH` and
+`NEXT_PUBLIC_SITE_URL` come from the `configure-pages` step, so the sitemap and
+share tags match wherever Pages puts the site.
+
+Because the export is unoptimized, next/image does not prefix `basePath` onto
+an image `src`, and nor does a plain `<a href>`. Anything of that kind must go
+through `withBasePath` from `src/lib/site-url.ts` or it will 404 on Pages.
+`npm run build:static` reproduces the Pages build locally.
+
+Any ordinary Node host also works, from the default build — nothing in the app
+is specific to Pages.
+
+The repository needs three settings for this to work, already in place:
+Pages **Source** set to _GitHub Actions_, workflow permissions set to _read and
+write_, and no deployment-branch restriction on the `github-pages`
+environment.
