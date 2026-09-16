@@ -1,4 +1,5 @@
 import type { Category, Language } from "@/lib/i18n";
+import { withBasePath } from "@/lib/site-url";
 
 import { arabicMenu } from "./ar";
 import { englishMenu } from "./en";
@@ -30,12 +31,12 @@ export function getCategoryContent(
 }
 
 export function getSectionImage(category: Category): string {
-  return sectionImage[category];
+  return withBasePath(sectionImage[category]);
 }
 
 /** Path to the printed menu PDF for a language. */
 export function pdfPath(language: Language): string {
-  return `/menus/${language}-menu.pdf`;
+  return withBasePath(`/menus/${language}-menu.pdf`);
 }
 
 export type { CategoryContent, MenuItem, MenuSection } from "./types";
