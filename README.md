@@ -1,6 +1,7 @@
-# Em Sherif
+# Em Sherif Café Erbil — menu
 
-Marketing website for the Em Sherif restaurant group.
+The digital menu for Em Sherif Café Erbil, in English, Kurdish and Arabic.
+Rebuilt from the previous static site as a Next.js app.
 
 ## Stack
 
@@ -11,6 +12,8 @@ Marketing website for the Em Sherif restaurant group.
 | Styling   | Tailwind CSS v4 with brand tokens           |
 | Quality   | ESLint, Prettier, `tsc --noEmit`            |
 | CI        | GitHub Actions (`.github/workflows/ci.yml`) |
+
+Every route is statically prerendered, so the site can be served from a CDN.
 
 ## Getting started
 
@@ -39,55 +42,76 @@ The site runs at http://localhost:3000.
 | `npm run format`       | Prettier write                |
 | `npm run format:check` | Prettier check (CI uses this) |
 
-## Project structure
+## How it is put together
 
 ```
 src/
-  app/                 App Router routes; one folder per page
-    layout.tsx         Root layout: fonts, metadata, header/footer
-    globals.css        Tailwind import + brand design tokens
-    robots.ts          Generated /robots.txt
-    sitemap.ts         Generated /sitemap.xml
+  app/
+    page.tsx               "/"                  language picker
+    [lang]/page.tsx        "/en"                category picker
+    [lang]/[category]      "/en/food"           the menu itself
   components/
-    layout/            Site-wide chrome (header, footer)
-    ui/                Reusable presentational primitives
+    menu-sections.tsx      structured menu rendering
+    menu-pages.tsx         scanned-page rendering (see below)
+    ui/logo.tsx            the wordmark
   lib/
-    site.ts            Site metadata, navigation, venue data
+    i18n.ts                languages, direction, UI strings, price formatting
+    menu/en.ts             the English menu, as data
+    menu/index.ts          which content each language/category resolves to
+scripts/
+  make-logo.mjs            regenerates the wordmark asset
 ```
 
-### Design tokens
+### Two ways a menu can be served
 
-Brand colours and typefaces are declared once in `src/app/globals.css` under
-`@theme`, which makes them available as Tailwind utilities:
+`src/lib/menu/types.ts` defines a category as **either** structured text
+(`kind: "sections"`) **or** scans of the printed pages (`kind: "pages"`). The
+page component renders whichever it is handed, so a language can be upgraded
+from scans to text without touching any component.
 
-- `burgundy`, `burgundy-light` — primary brand colour
-- `gold`, `gold-light` — accent
-- `cream`, `ink` — page background and body text
-- `font-display` (Cormorant Garamond), `font-body` (Inter)
+- **English** is structured text: it reflows on a phone, is readable by screen
+  readers, and can be indexed by search engines.
+- **Kurdish and Arabic** are still the scanned pages carried over from the old
+  site — see "Outstanding work".
 
-Use the semantic names rather than raw hex values so a rebrand stays a one-file change.
+### Right-to-left
 
-## Content sources
+Kurdish and Arabic set `dir="rtl"` on the page, which mirrors the layout. The
+UI strings for all three languages come from `src/lib/i18n.ts` and were carried
+over verbatim from the previous site, so the approved wording is unchanged.
 
-All copy currently in the repo is **placeholder** and marked as such on each page.
-Before launch the following need confirmed, approved content:
+Prices are deliberately formatted with `en-US` grouping in every language: the
+printed Arabic and Kurdish menus both set prices in Western digits, and an
+`ar`/`ckb` locale would render them as Arabic-Indic numerals instead.
 
-- Brand narrative and founder story (`/about`)
-- Menus, per venue (`/menus`)
-- Venue addresses, opening hours and phone numbers (`src/lib/site.ts`)
-- Reservation provider and its credentials (`/reservations`)
-- Photography and an `og-image` for social sharing
+### Brand
 
-## Open decisions
+Taken from the printed menu: navy `#183f67` on ivory `#fffff5`, Cormorant
+Garamond for display and Inter for body text. The colours are declared once in
+`src/app/globals.css` under `@theme` and used as `text-ink` / `bg-paper`, so a
+change lands in one place.
 
-- **Content management** — copy and menus are hard-coded in `src/lib/site.ts`
-  today. If editors need to update them, plug in a CMS or a database-backed
-  admin before building more pages.
-- **Reservations** — no booking provider is integrated yet.
-- **Languages** — the site is English-only; Arabic/French would need
-  `next-intl` or the App Router's `[locale]` segment.
+The wordmark (`public/em-sherif-cafe-logo.png`) is cut from the cover page of
+the printed menu and recoloured to navy on transparency by
+`scripts/make-logo.mjs`. It is served with `unoptimized` because it is flat
+line art: Next's re-encode shifted the ivory by one 8-bit step, which showed as
+a faint box against the page.
+
+## Outstanding work
+
+- **Transcribe the Kurdish and Arabic menus** into `src/lib/menu/ku.ts` and
+  `ar.ts`, matching the shape of `en.ts`, then swap them into the registry in
+  `src/lib/menu/index.ts`. They should be typed up or proof-read by someone who
+  reads the language — prices especially. Until then both languages fall back
+  to the page scans, exactly as the old site did.
+- **Confirm the English transcription** against the current printed menu,
+  particularly prices, before this goes in front of guests.
+- **Café details** — address, opening hours, phone and social links are not on
+  the site at all yet.
+- **Favicon and share image** still need the brand versions.
 
 ## Deployment
 
-Any Node host works. Vercel needs no configuration beyond `NEXT_PUBLIC_SITE_URL`.
-Set the variables from `.env.example` in the hosting provider before the first deploy.
+Any Node host works, and `output: "export"` would also produce a plain static
+bundle. Set `NEXT_PUBLIC_SITE_URL` in the hosting provider before the first
+deploy so canonical URLs and the sitemap are right.

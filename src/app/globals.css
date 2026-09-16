@@ -1,53 +1,44 @@
 @import "tailwindcss";
 
 /*
- * Brand tokens. Defined once here and exposed to Tailwind through @theme so
- * components use semantic names (bg-burgundy, text-gold) instead of hex values.
+ * Brand tokens, taken from the printed Em Sherif Café menu:
+ * deep navy on a warm ivory paper stock.
  */
 @theme {
-  --color-burgundy: #4a1416;
-  --color-burgundy-light: #6d2326;
-  --color-gold: #c6a45c;
-  --color-gold-light: #e0c88f;
-  --color-cream: #f7f2e8;
-  --color-ink: #1c1412;
+  --color-ink: #183f67;
+  --color-paper: #fffff5;
 
   /* The --font-* sources are injected by next/font in app/layout.tsx. */
   --font-display: var(--font-cormorant), "Times New Roman", serif;
   --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
-  --tracking-brand: 0.28em;
+  --tracking-brand: 0.18em;
 }
 
 @layer base {
-  html {
-    scroll-behavior: smooth;
-  }
-
   body {
-    background-color: var(--color-cream);
+    background-color: var(--color-paper);
     color: var(--color-ink);
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
   }
 
-  h1,
-  h2,
-  h3 {
-    font-family: var(--font-display);
-    font-weight: 300;
+  ::selection {
+    background-color: var(--color-ink);
+    color: var(--color-paper);
   }
 
-  ::selection {
-    background-color: var(--color-gold);
-    color: var(--color-burgundy);
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 3px;
   }
 }
 
 @layer components {
-  /* Small caps label used above section headings throughout the site. */
+  /* Small caps label, matching the printed menu's section furniture. */
   .eyebrow {
     font-size: 0.6875rem;
+    font-weight: 600;
     letter-spacing: var(--tracking-brand);
     text-transform: uppercase;
   }

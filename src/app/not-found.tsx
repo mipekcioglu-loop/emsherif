@@ -1,20 +1,15 @@
 import Link from "next/link";
 
-import { PageHeader } from "@/components/ui/page-header";
-import { Section } from "@/components/ui/section";
+import { Logo } from "@/components/ui/logo";
 
 export default function NotFound() {
   return (
-    <>
-      <PageHeader eyebrow="404" title="Page not found" />
-      <Section>
-        <Link
-          href="/"
-          className="eyebrow text-burgundy hover:text-gold border-b border-current pb-1 transition-colors"
-        >
-          Return home
-        </Link>
-      </Section>
-    </>
+    <main className="flex min-h-dvh flex-col items-center justify-center px-6 text-center">
+      <Logo />
+      <h1 className="font-display mt-10 text-4xl">Page not found</h1>
+      <Link href="/" className="mt-6 text-sm underline underline-offset-4">
+        Back to the menu
+      </Link>
+    </main>
   );
 }
