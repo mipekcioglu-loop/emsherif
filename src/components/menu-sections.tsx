@@ -2,19 +2,24 @@ import { formatPrice } from "@/lib/i18n";
 import type { MenuSection } from "@/lib/menu";
 
 /**
- * Structured menu rendering: one block per printed section, each item a row of
- * name, description and price. Single column on a phone, two on wider screens.
+ * One block per printed section, each item a row of name, description and
+ * price. Where a category holds a single section its heading is dropped — the
+ * page title already carries the same word.
  */
 export function MenuSections({ sections }: { sections: MenuSection[] }) {
+  const showTitles = sections.length > 1;
+
   return (
-    <div className="space-y-16">
+    <div className={showTitles ? "space-y-16" : ""}>
       {sections.map((section) => (
         <section key={section.title}>
-          <h2 className="font-display border-ink/15 border-b pb-3 text-center text-3xl">
-            {section.title}
-          </h2>
+          {showTitles ? (
+            <h2 className="font-display border-ink/15 border-b pb-3 text-center text-3xl">
+              {section.title}
+            </h2>
+          ) : null}
 
-          <ul className="mt-8 space-y-6">
+          <ul className={showTitles ? "mt-8 space-y-6" : "space-y-6"}>
             {section.items.map((item, index) => (
               <li
                 key={`${item.name}-${index}`}

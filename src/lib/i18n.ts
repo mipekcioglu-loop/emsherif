@@ -8,7 +8,7 @@
 export const languages = ["en", "ku", "ar"] as const;
 export type Language = (typeof languages)[number];
 
-export const categories = ["food", "drinks", "sweets"] as const;
+export const categories = ["food", "sweets", "drinks"] as const;
 export type Category = (typeof categories)[number];
 
 export function isLanguage(value: string): value is Language {
@@ -35,6 +35,8 @@ type Dictionary = {
   home: string;
   fullMenuPdf: string;
   currency: string;
+  /** Opening copy from the printed menu. Kurdish has none. */
+  intro?: readonly string[];
   categoryLabels: Record<Category, string>;
 };
 
@@ -53,7 +55,11 @@ export const dictionaries: Record<Language, Dictionary> = {
     home: "Home",
     fullMenuPdf: "Full menu PDF",
     currency: "IQD",
-    categoryLabels: { food: "Food", drinks: "Beverages", sweets: "Sweets" },
+    intro: [
+      "Discover the warmth of Lebanese hospitality at Em Sherif Café, a cozy retreat in the heart of the city.",
+      "Enjoy dishes inspired by family traditions, blending contemporary flair with authentic flavors and cherished rituals.",
+    ],
+    categoryLabels: { food: "Food", sweets: "Sweets", drinks: "Drinks" },
   },
   ku: {
     endonym: "کوردی",
@@ -69,7 +75,7 @@ export const dictionaries: Record<Language, Dictionary> = {
     home: "سەرەکی",
     fullMenuPdf: "مێنیوی تەواو (PDF)",
     currency: "دینار",
-    categoryLabels: { food: "خواردن", drinks: "خواردنەوە", sweets: "شیرینی" },
+    categoryLabels: { food: "خواردن", sweets: "شیرینی", drinks: "خواردنەوە" },
   },
   ar: {
     endonym: "العربية",
@@ -85,7 +91,11 @@ export const dictionaries: Record<Language, Dictionary> = {
     home: "الرئيسية",
     fullMenuPdf: "القائمة الكاملة (PDF)",
     currency: "دينار",
-    categoryLabels: { food: "الطعام", drinks: "المشروبات", sweets: "الحلويات" },
+    intro: [
+      "اكتشف دفء الضيافة اللبنانية في إم شريف، ملاذًا دافئًا في قلب المدينة.",
+      "استمتع بأطباق مستوحاة من تقاليد عائلية، تمزج بين لمسة عصرية ونكهات أصيلة.",
+    ],
+    categoryLabels: { food: "الطعام", sweets: "الحلويات", drinks: "المشروبات" },
   },
 };
 

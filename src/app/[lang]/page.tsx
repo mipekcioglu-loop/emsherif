@@ -27,11 +27,20 @@ export default async function CategoryPickerPage({ params }: PageProps<"/[lang]"
     <main
       dir={dictionary.dir}
       lang={dictionary.locale}
-      className="flex min-h-dvh flex-col items-center px-6 pt-14 pb-12 text-center"
+      className="flex min-h-dvh flex-col items-center px-6 pt-12 pb-12 text-center"
     >
       <Logo priority />
 
-      <p className="eyebrow mt-14">{dictionary.menuName}</p>
+      {/* The printed menu opens on this passage, so the digital menu does too. */}
+      {dictionary.intro ? (
+        <div className="font-display mt-12 max-w-md space-y-5 text-xl leading-snug text-balance italic">
+          {dictionary.intro.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+        </div>
+      ) : null}
+
+      <p className="eyebrow mt-12">{dictionary.menuName}</p>
       <h1 className="font-display mt-3 text-4xl">{dictionary.chooseSection}</h1>
       <p className="mt-3 text-sm">{dictionary.chooseSectionHint}</p>
 

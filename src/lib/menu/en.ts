@@ -6,7 +6,6 @@ import type { LanguageMenu } from "./types";
  */
 export const englishMenu: LanguageMenu = {
   food: {
-    kind: "sections",
     sections: [
       {
         title: "Furn",
@@ -387,13 +386,13 @@ export const englishMenu: LanguageMenu = {
         title: "Masheweh",
         items: [
           {
-            name: "Lahmeh Mechwiyeh (beef)",
+            name: "Lahmeh Mechwiyeh",
             description:
               'Grilled beef skewers "Black Angus", tomato, chilli, onion served with oriental rice',
             price: 29000,
           },
           {
-            name: "Lahmeh Mechwiyeh (lamb)",
+            name: "Lahmeh Mechwiyeh",
             description:
               "Grilled lamb skewers, tomato, chilli, onion served with oriental rice",
             price: 36000,
@@ -461,7 +460,6 @@ export const englishMenu: LanguageMenu = {
     ],
   },
   drinks: {
-    kind: "sections",
     sections: [
       {
         title: "Soft Drinks & Cold Beverages",
@@ -529,7 +527,6 @@ export const englishMenu: LanguageMenu = {
     ],
   },
   sweets: {
-    kind: "sections",
     sections: [
       {
         title: "Sweets",

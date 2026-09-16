@@ -48,31 +48,66 @@ The site runs at http://localhost:3000.
 src/
   app/
     page.tsx               "/"                  language picker
-    [lang]/page.tsx        "/en"                category picker
+    [lang]/page.tsx        "/en"                opening passage + section picker
     [lang]/[category]      "/en/food"           the menu itself
   components/
-    menu-sections.tsx      structured menu rendering
-    menu-pages.tsx         scanned-page rendering (see below)
+    menu-sections.tsx      the menu rendering
+    section-image.tsx      the photograph each section opens with
     ui/logo.tsx            the wordmark
   lib/
     i18n.ts                languages, direction, UI strings, price formatting
-    menu/en.ts             the English menu, as data
-    menu/index.ts          which content each language/category resolves to
+    menu/{en,ku,ar}.ts     the three menus, as data
+    menu/index.ts          the registry and section photography
 scripts/
+  menu-from-pdf.mjs        regenerates ar.ts and ku.ts from the printed PDFs
+  audit-prices.mjs         compares the three menus against each other
   make-logo.mjs            regenerates the wordmark asset
+docs/
+  menu-discrepancies.md    where the printed menus disagree
 ```
 
-### Two ways a menu can be served
+### Photography
 
-`src/lib/menu/types.ts` defines a category as **either** structured text
-(`kind: "sections"`) **or** scans of the printed pages (`kind: "pages"`). The
-page component renders whichever it is handed, so a language can be upgraded
-from scans to text without touching any component.
+The printed menu opens Food, Sweets and Drinks with a photograph. Those pages
+are cropped out of the menu scans into `public/sections/` and shown at the top
+of each category at their own proportions. The Kurdish and Arabic booklets
+carry fewer of these than the English one, so all three languages share the
+English set rather than leaving a language visually thinner.
 
-- **English** is structured text: it reflows on a phone, is readable by screen
-  readers, and can be indexed by search engines.
-- **Kurdish and Arabic** are still the scanned pages carried over from the old
-  site — see "Outstanding work".
+### The menu is text, not page scans
+
+All three languages are structured data — 128 dishes across 16 sections each —
+so the menu reflows on a phone, works with screen readers and can be indexed,
+instead of being A4 page images a guest has to pinch-zoom.
+
+The Kurdish and Arabic files are **generated, not hand-typed**. The printed
+PDFs carry a real text layer, and `scripts/menu-from-pdf.mjs` reads it, so the
+dish names, descriptions and prices on the site are the approved wording
+character for character:
+
+```bash
+npm i -D pdfjs-dist && node scripts/menu-from-pdf.mjs && npm run format
+npm uninstall pdfjs-dist
+```
+
+Do not edit `src/lib/menu/ar.ts` or `ku.ts` by hand — regenerate them.
+`src/lib/menu/en.ts` is hand-written but was verified against the same text
+layer, item for item.
+
+The PDF fonts have three quirks the script repairs: the lam-alef ligature comes
+out with its letters transposed, some dal glyphs are emitted as zero-width
+overlays, and a few Kurdish letters are mapped onto Arabic lookalikes. Each
+repair is an explicit, commented list rather than a blanket rule.
+
+### Checking the menu
+
+`scripts/audit-prices.mjs` compares the three printed menus against each other
+and reports every disagreement. It currently finds four dishes priced
+differently between languages, and the Arabic hot-drinks list is shifted
+against its prices. These are faults **in the printed menus**, so the site
+reproduces each language exactly as printed and the conflicts are written up in
+[docs/menu-discrepancies.md](docs/menu-discrepancies.md) for the café to
+resolve.
 
 ### Right-to-left
 
@@ -99,13 +134,16 @@ a faint box against the page.
 
 ## Outstanding work
 
-- **Transcribe the Kurdish and Arabic menus** into `src/lib/menu/ku.ts` and
-  `ar.ts`, matching the shape of `en.ts`, then swap them into the registry in
-  `src/lib/menu/index.ts`. They should be typed up or proof-read by someone who
-  reads the language — prices especially. Until then both languages fall back
-  to the page scans, exactly as the old site did.
-- **Confirm the English transcription** against the current printed menu,
-  particularly prices, before this goes in front of guests.
+- **Resolve the menu conflicts** in [docs/menu-discrepancies.md](docs/menu-discrepancies.md).
+  Four dishes carry different prices in different languages and the Arabic
+  hot-drinks list is misaligned; those are live on the site today because the
+  site reproduces each language as printed.
+- **Have a native speaker read the Kurdish and Arabic pages.** The text comes
+  from the PDFs rather than from retyping, so the wording is the approved
+  wording, but the font repairs above are worth a second pair of eyes.
+- **Kurdish opening passage** — English and Arabic both open with a short
+  welcome; there is no Kurdish equivalent in the approved menu, so that
+  language currently starts at the sections.
 - **Café details** — address, opening hours, phone and social links are not on
   the site at all yet.
 - **Favicon and share image** still need the brand versions.

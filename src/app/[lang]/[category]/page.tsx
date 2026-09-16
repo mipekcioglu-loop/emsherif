@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { MenuPages } from "@/components/menu-pages";
 import { MenuSections } from "@/components/menu-sections";
+import { SectionImage } from "@/components/section-image";
 import { Logo } from "@/components/ui/logo";
 import { categories, dictionaries, isCategory, isLanguage, languages } from "@/lib/i18n";
-import { getCategoryContent, pdfPath } from "@/lib/menu";
+import { getCategoryContent, getSectionImage, pdfPath } from "@/lib/menu";
 
 export function generateStaticParams() {
   return languages.flatMap((lang) => categories.map((category) => ({ lang, category })));
@@ -55,26 +55,28 @@ export default async function MenuPage({ params }: PageProps<"/[lang]/[category]
         </nav>
       </header>
 
-      <main className="mx-auto max-w-3xl px-5 py-12">
-        {content.kind === "sections" ? (
-          <MenuSections sections={content.sections} />
-        ) : (
-          <MenuPages language={lang} pages={content.pages} label={label} />
-        )}
+      <main className="mx-auto max-w-3xl px-5 pt-8 pb-12">
+        <SectionImage src={getSectionImage(category)} alt={label} />
+        <h1 className="font-display mt-10 mb-12 text-center text-4xl">{label}</h1>
+        <MenuSections sections={content.sections} />
       </main>
 
-      <footer className="flex flex-col items-center gap-3 px-6 pb-12 text-center">
-        <a
-          href={pdfPath(lang)}
-          target="_blank"
-          rel="noopener"
-          className="text-sm underline underline-offset-4"
-        >
-          {dictionary.fullMenuPdf}
-        </a>
-        <Link href="/" className="text-sm underline underline-offset-4">
-          {dictionary.changeLanguage}
-        </Link>
+      <footer className="flex flex-col items-center gap-6 px-6 pb-14 text-center">
+        {/* The printed menu closes on the wordmark; so does each language here. */}
+        <Logo width={150} />
+        <div className="flex flex-col items-center gap-3">
+          <a
+            href={pdfPath(lang)}
+            target="_blank"
+            rel="noopener"
+            className="text-sm underline underline-offset-4"
+          >
+            {dictionary.fullMenuPdf}
+          </a>
+          <Link href="/" className="text-sm underline underline-offset-4">
+            {dictionary.changeLanguage}
+          </Link>
+        </div>
       </footer>
     </div>
   );

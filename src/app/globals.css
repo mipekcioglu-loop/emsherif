@@ -23,6 +23,13 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /* The display face is Latin-only, so Arabic and Kurdish already fall back to
+     a system face. Drop the italic too, rather than let the browser synthesise
+     an oblique the printed menu never had. */
+  [dir="rtl"] .font-display {
+    font-style: normal;
+  }
+
   ::selection {
     background-color: var(--color-ink);
     color: var(--color-paper);
