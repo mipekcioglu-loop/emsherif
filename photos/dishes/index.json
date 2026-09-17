@@ -165,6 +165,10 @@
     "photo": "fattet-batenjen.jpg",
     "verdict": "confirmed"
   },
+  "Fattet Maftoul": {
+    "photo": "fattet-maftoul.jpg",
+    "verdict": "confirmed"
+  },
   "Djej Msahab": [
     {
       "photo": "djej-msahab.jpg",
@@ -418,8 +422,7 @@
     "verdict": "confirmed"
   },
   "Kibbet Lahmeh bi Laban": {
-    "photo": "fattet-maftoul.jpg",
-    "slug": "kibbet-lahmeh-bi-laban",
+    "photo": "kibbet-lahmeh-bi-laban.jpg",
     "verdict": "corrected"
   },
   "Bahamas": {

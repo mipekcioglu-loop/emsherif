@@ -31,29 +31,24 @@ See [provisional-strings.md](./provisional-strings.md). The menu itself — ever
 dish name, description and price — is not affected: that comes from the printed
 menus and is unchanged.
 
-## 4. Photographs for 17 dishes
+## 4. Photographs for 16 dishes
 
-111 of the 128 dishes carry a photograph, out of 110 frames — the Lahmeh
-Mechwiyeh frame serves both of its rows. The other 17 show the debossed wordmark
+112 of the 128 dishes carry a photograph, out of 111 frames — the Lahmeh
+Mechwiyeh frame serves both of its rows. The other 16 show the debossed wordmark
 card, which is a designed state rather than a gap, so this is not urgent — but
 the list is worth having when the café next books a shoot:
 
 Beyd Ouyoun · Beyd Makhfouk · Beyd Soujouk · Beyd Omelette · Beyd bi Kawarma ·
 Beyd Shakshouka (the café says the six egg dishes are not shot yet) ·
-**Fattet Maftoul** · Sahen Kabis · Hummus Shawarma · Foul ·
-Mineral Water — Large · Seven Up Diet · Pepsi · Non-Alcoholic Beer · Mouassal ·
-Ice Tea Peach · Ice Tea Lemon.
+Sahen Kabis · Hummus Shawarma · Foul · Mineral Water — Large · Seven Up Diet ·
+Pepsi · Non-Alcoholic Beer · Mouassal · Ice Tea Peach · Ice Tea Lemon.
 
-Two of those are not waiting on a shoot:
+One more is missing that the list above does not show:
 
-- **Fattet Maftoul** was photographed and is now empty, because the frame that
-  shipped under that name turned out to be Kibbet Lahmeh bi Laban. The café
-  captioned a Fattet Maftoul photograph in their last batch but did not send the
-  file. **Request it.**
 - **اسبريسو بدون كافيين**, the decaf espresso, is an Arabic-only row
   (`ar drinks:4:6`) that has never had a photograph. The café captioned one and
-  did not send it either. It does not appear in the list above because English
-  has no such row — see [menu-discrepancies.md](./menu-discrepancies.md) §2.
+  did not send the file. It does not appear in the list because English has no
+  such row — see [menu-discrepancies.md](./menu-discrepancies.md) §2.
 
 ## 5. Photography questions the café has answered
 
@@ -66,7 +61,10 @@ Two of those are not waiting on a shoot:
   it. `DUPLICATE_NAMES` in [`scripts/dish-photos.mjs`](../scripts/dish-photos.mjs)
   records which frame belongs to which printing.
 - **Fattet Maftoul's photograph is Kibbet Lahmeh bi Laban**, and **Musakhan and
-  Mini Lahmeh bi Ajeen had each other's**. Both corrected.
+  Mini Lahmeh bi Ajeen had each other's**. Both corrected. That left Fattet
+  Maftoul with no photograph of its own; the café has since sent one — an oval
+  steel pan of chickpeas under toasted pita and pine nuts — so that loose end is
+  closed and the dish has its own frame again.
 
 ## 6. Photograph identifications
 

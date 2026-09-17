@@ -98,7 +98,9 @@ English and the Kurdish. Note that this dish is also §1's largest price gap.
 
 They also corrected two photographs, which do not touch the menu text: the frame
 shipped as Fattet Maftoul is Kibbet Lahmeh bi Laban, and Musakhan and Mini
-Lahmeh bi Ajeen had each other's. Both are fixed in `photos/dishes/index.json`.
+Lahmeh bi Ajeen had each other's. Both are fixed in `photos/dishes/index.json`,
+and the café has since sent a Fattet Maftoul photograph to fill the slot the
+first of those emptied.
 
 Four further name spellings are still with the café and are **not** applied;
 `docs/pending-content.md` §7 lists them. Two photographs they have confirmed do

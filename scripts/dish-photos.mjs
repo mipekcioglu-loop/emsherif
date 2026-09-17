@@ -198,8 +198,13 @@ function buildMapping(index, report) {
   const files = new Map(); // slug -> its source file in photos/dishes
 
   /** A frame's slug: its own if index.json names one, else the file's name.
-   *  Named slugs matter where a frame turned out to be a different dish —
-   *  a card for Kibbet Lahmeh bi Laban should not serve fattet-maftoul.webp. */
+   *
+   *  Named slugs matter where a frame turned out to be a different dish, so
+   *  the file name no longer says what is in it — Musakhan and Mini Lahmeh bi
+   *  Ajeen were shot under each other's names, and a card should not serve a
+   *  .webp named after the wrong dish. Where only one file was wrong it has
+   *  been renamed instead, which is tidier; that pair cannot be, because
+   *  renaming either one would collide with the other. */
   const slugOf = (entry) =>
     entry.slug ?? path.basename(entry.photo, path.extname(entry.photo));
 
