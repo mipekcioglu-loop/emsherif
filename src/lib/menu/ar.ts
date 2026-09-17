@@ -80,7 +80,7 @@ export const arabicMenu: LanguageMenu = {
             price: 9000,
           },
           {
-            name: "ل",
+            name: "لَبنة",
             description: "لبنة، خيار، بندورة، زيتون، نعناع، زعتر، وزيت زيتون بكر ممتاز",
             price: 7500,
           },
@@ -158,10 +158,10 @@ export const arabicMenu: LanguageMenu = {
         ],
       },
       {
-        title: "ني",
+        title: "نيّ",
         items: [
           {
-            name: "كبة ن",
+            name: "كبة نيّة",
             description: "لحم بقري نيّ على الطريقة اللبنانية مع برغل وريحان",
             price: 24000,
           },
@@ -191,7 +191,7 @@ export const arabicMenu: LanguageMenu = {
             price: 10000,
           },
           {
-            name: "مح",
+            name: "محمّرة",
             description: "فلفل حلو مشوي، طحينة، حامض، جوز مع زيت الزيتون",
             price: 14000,
           },
@@ -226,7 +226,7 @@ export const arabicMenu: LanguageMenu = {
             price: 8500,
           },
           {
-            name: "مس",
+            name: "مسقّعة باذنجان",
             description: "باذنجان، بندورة، بصل، حبق، زيت الزيتون البكر الممتاز",
             price: 9000,
           },
@@ -422,7 +422,7 @@ export const arabicMenu: LanguageMenu = {
           },
           {
             name: "كباب",
-            description: "كباب، بندورة، فلفل وبصل تقدم مع ثلاثة أنواع من األرز",
+            description: "كباب، بندورة، فلفل وبصل تقدم مع ثلاثة أنواع من الأرز",
             price: 26000,
           },
           {
@@ -453,7 +453,7 @@ export const arabicMenu: LanguageMenu = {
           },
           {
             name: "فاصوليا باللحمة",
-            description: "موزة غنم مع الفاصوليا بصلصة البندورة، تقدّم مع األرز األبيض",
+            description: "موزة غنم مع الفاصوليا بصلصة البندورة، تقدّم مع الأرز الأبيض",
             price: 34000,
           },
           {
@@ -553,8 +553,7 @@ export const arabicMenu: LanguageMenu = {
             price: 9500,
           },
           {
-            name: "بينك",
-            description: "75",
+            name: "بينك 75",
             price: 9500,
           },
           {
@@ -583,8 +582,7 @@ export const arabicMenu: LanguageMenu = {
             price: 8500,
           },
           {
-            name: "ُج",
-            description: "زر",
+            name: "جُزر",
             price: 9000,
           },
           {
@@ -653,7 +651,7 @@ export const arabicMenu: LanguageMenu = {
             price: 8000,
           },
           {
-            name: "ريد بول اليت",
+            name: "ريد بول لايت",
             price: 8000,
           },
           {
@@ -708,6 +706,7 @@ export const arabicMenu: LanguageMenu = {
           },
           {
             name: "شاي",
+            description: "بابونج، شاي أخضر، ليمون، شاي إيرل جراي، انجليش بريكفاست",
             price: 8000,
           },
         ],

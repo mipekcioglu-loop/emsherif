@@ -26,7 +26,7 @@ export const kurdishMenu: LanguageMenu = {
             price: 14000,
           },
           {
-            name: "لحم بعجینی بچووک |",
+            name: "لحم بعجینی بچووک | ٣ دانە",
             description: "فەتایەری قیمەی توون و دەنکە سنۆبەر",
             price: 12000,
           },
@@ -153,7 +153,7 @@ export const kurdishMenu: LanguageMenu = {
           },
           {
             name: "زەڵاتەی مریشک",
-            description: "کاەو، مریشکی برژاو، نانی عەرەبیی کرەسپ، سۆسی موستەردی دانەدار",
+            description: "کاهو، مریشکی برژاو، نانی عەرەبیی کرەسپ، سۆسی موستەردی دانەدار",
             price: 18000,
           },
         ],
@@ -188,7 +188,9 @@ export const kurdishMenu: LanguageMenu = {
             price: 18000,
           },
           {
-            name: "حومس، گۆشتی مانگای سوورەکراو، بیبەری سەوزی توون، تە ڕەپیاز،",
+            name: "حومس بە گۆشتی سەرەچۆلەکەی توون",
+            description:
+              "حومس، گۆشتی مانگای سوورەکراو، بیبەری سەوزی توون، تە ڕەپیاز، دەنکە سنۆبەر و زەیتی توون",
             price: 24000,
           },
           {
@@ -203,7 +205,7 @@ export const kurdishMenu: LanguageMenu = {
           },
           {
             name: "شاورمەی مریشک",
-            description: "گەسی مریشک، سۆسی سیر، خەیارشۆر و کاەو",
+            description: "گەسی مریشک، سۆسی سیر، خەیارشۆر و کاهو",
             price: 22000,
           },
           {
@@ -242,7 +244,8 @@ export const kurdishMenu: LanguageMenu = {
             price: 19000,
           },
           {
-            name: "قاشە گۆشتی مانگای سوورەکراو، دۆشاوی هەنار و",
+            name: "گۆشتی سەرەچۆلەکە بە سرکەی هەنار",
+            description: "قاشە گۆشتی مانگای سوورەکراو، دۆشاوی هەنار و دەنکە سنۆبەر",
             price: 24000,
           },
           {
@@ -341,7 +344,7 @@ export const kurdishMenu: LanguageMenu = {
             price: 5500,
           },
           {
-            name: "زەڵاتەی ڕاەیب",
+            name: "زەڵاتەی ڕاهیب",
             description: "باینجانی برژاو، هەنار، بیبەری توون، نەعنا و سۆسی لیمۆ و سیر",
             price: 12000,
           },
@@ -382,7 +385,7 @@ export const kurdishMenu: LanguageMenu = {
           },
           {
             name: "شاورمەی مریشک",
-            description: "گەسی مریشک، سۆسی سیر، خەیارشۆر و کاەو",
+            description: "گەسی مریشک، سۆسی سیر، خەیارشۆر و کاهو",
             price: 10000,
           },
           {
@@ -558,12 +561,11 @@ export const kurdishMenu: LanguageMenu = {
             price: 9500,
           },
           {
-            name: "پینک",
-            description: "٧٥",
+            name: "پینک ٧٥",
             price: 9500,
           },
           {
-            name: "مۆەیتۆی پاشن فرووت",
+            name: "مۆهیتۆی پاشن فرووت",
             price: 10500,
           },
           {
@@ -657,7 +659,7 @@ export const kurdishMenu: LanguageMenu = {
             price: 8000,
           },
           {
-            name: "ڕێد بوڵ الیت",
+            name: "ڕێد بوڵ لایت",
             price: 8000,
           },
           {
@@ -712,6 +714,7 @@ export const kurdishMenu: LanguageMenu = {
           },
           {
             name: "جۆرەکانی چای",
+            description: "بابونج، شای أخضر، لیمون، شای إیرل جرای، انجلیش بریکفاست",
             price: 8000,
           },
         ],

@@ -3,10 +3,21 @@
  * public/menus, so the dish names, descriptions and prices on the site are the
  * approved wording rather than anything retyped by hand.
  *
- * The menus carry a real text layer, but their fonts have two quirks: the
- * lam-alef ligature comes out with its letters transposed, and some dal glyphs
- * are emitted as zero-width overlays. A few lines also break without a space.
- * All three are repaired below.
+ * The menus carry a real text layer, but their fonts have three quirks:
+ *
+ * 1. A word is split into several runs wherever a glyph needs its own run —
+ *    at a diacritic, mostly. "لَبنة" arrives as "ل" + "َبنة". The runs are
+ *    rejoined by geometry in `runs()`, so this is handled as a class rather
+ *    than a list of broken words.
+ * 2. Some dal glyphs are emitted as zero-width overlays on the run they
+ *    follow.
+ * 3. The lam-alef ligature comes out with its two letters transposed. Where
+ *    the alef carries a hamza this is unambiguous and is repaired by rule;
+ *    with a bare alef it is not, because the Arabic definite article has the
+ *    same shape, so those stay an explicit list. See LIGATURES below.
+ *
+ * Kurdish has a fourth: the font sets both the vowel ە and a real /h/ as
+ * U+0647, and nothing around the letter says which. See kurdishLetters().
  *
  * `pdfjs-dist` is not a project dependency — install it only to rerun this:
  *   npm i -D pdfjs-dist && node scripts/menu-from-pdf.mjs && npm uninstall pdfjs-dist
@@ -24,12 +35,28 @@ const isPrice = (c) => PRICE.test(c.s.trim()) && Number(c.s.replace(/,/g, "")) >
 const LTR_FILES = new Set(["en"]);
 let LTR = false;
 const byReading = (a, b) => (LTR ? a.x - b.x : b.x - a.x);
+/** The edge a column is aligned on: left for English, right for Arabic and Kurdish. */
+const startEdge = (c) => (LTR ? c.x : c.x + c.w);
 
 /**
- * The menu fonts emit the lam-alef ligature with its two letters transposed,
- * so these words come out of the text layer reversed. Repaired by exact match
- * rather than a blanket rule, because "ال" is also the Arabic definite article.
+ * The lam-alef ligature comes out of the text layer with its two letters the
+ * wrong way round. It splits into two cases, and only one of them can be a
+ * rule.
+ *
+ * Where the alef carries a hamza — أ إ آ — the reversed pair is unambiguous:
+ * across both menus every single occurrence of one of those followed by a lam
+ * is a transposed ligature (الأرز and الأبيض, and nothing else), so it is
+ * repaired by rule and a new one would be repaired too.
+ *
+ * With a bare alef it cannot be: "ا" followed by "ل" is also how the Arabic
+ * definite article is spelled. 96 distinct Arabic words in these menus have
+ * that shape and 11 of them are broken; Kurdish has 13, of which 12 are
+ * broken and one — السرايا, in عيش السرايا — is a real article. Nothing in the
+ * letters tells them apart, so those stay an exact-match list. Every entry is
+ * asserted to fire, so a stale one cannot sit here unnoticed.
  */
+const HAMZA_ALEF_LAM = /([آأإ])ل/gu;
+
 const LIGATURES = {
   ar: {
     الشوكوالتة: "الشوكولاتة",
@@ -42,11 +69,11 @@ const LIGATURES = {
     فالفل: "فلافل",
     التيه: "لاتيه",
     بالك: "بلاك",
+    اليت: "لايت",
   },
   ku: {
     زەالتە: "زەڵاتە",
     زەاڵتەی: "زەڵاتەی",
-    زەاڵتە: "زەڵاتە",
     شۆکۆالتە: "شۆکۆلاتە",
     حەالوە: "حەلاوە",
     تێکەاڵو: "تێکەڵاو",
@@ -57,51 +84,165 @@ const LIGATURES = {
     شوکواڵتە: "شوکوڵاتە",
     شوکواڵتەی: "شوکوڵاتەی",
     فەالفل: "فەلافل",
-    فهالفل: "فەلافل",
     ڤانیال: "ڤانیلا",
     ڤانێال: "ڤانێلا",
-    "ڤانێال،": "ڤانێلا،",
     فالت: "فلات",
     بالک: "بلاک",
     بالنک: "بلانک",
     گەاڵ: "گەڵا",
     التی: "لاتی",
     ڕۆژهەاڵتی: "ڕۆژهەڵاتی",
-    شوکواڵتەی: "شوکوڵاتەی",
+    الیت: "لایت",
   },
 };
 
 /**
- * The menu fonts map some Kurdish letters onto their Arabic lookalikes.
- * Non-initial heh is the vowel ە, except before an existing ە, where it is a
- * real consonant (as in ڕۆژهەڵاتی).
+ * The menu fonts map some Kurdish letters onto their Arabic lookalikes. Kaf
+ * and yeh are unconditional. Heh is not, and cannot be made into a rule: the
+ * font sets both the vowel ە and a real /h/ as U+0647, and the letters
+ * around them do not distinguish the two. This menu has سرکهی, which needs the
+ * vowel, and ڕاهیب, which needs the consonant — the same heh, before the
+ * same yeh, wanting opposite answers.
+ *
+ * The rule that used to be here guessed from the following letter and got
+ * three words wrong, shipping ڕاەیب, مۆەیتۆی and کاەو. So the choice is
+ * made from the word instead. The corpus is closed — three fixed PDFs, 128
+ * approved dishes — so every word carrying a non-initial heh is named here,
+ * and one that is in neither list stops the run instead of being guessed at.
  */
+const HEH_IS_CONSONANT = new Set([
+  "باهاماس", // Bahamas
+  "بەهارات", // spice
+  "بەهاراتدار", // spiced
+  "بەهاراتکراو", // spiced
+  "مۆهیتۆی", // mojito
+  "ڕاهیب", // Raheb, the salad
+  "ڕۆژهەاڵتی", // oriental (its lam-alef is still transposed here)
+  "کاهو", // lettuce
+]);
+
+/** The rest of the corpus, where the heh is the vowel ە. */
+const HEH_IS_VOWEL = new Set([
+  "بلیله",
+  "به",
+  "بهرخ",
+  "ته",
+  "زەعتهری",
+  "سرکهی",
+  "شیرهمهنییهکان",
+  "فهالفل",
+  "فینگه",
+  "فینگهر",
+  "فینگهری",
+  "لەگهل",
+  "هێلکه",
+  "پۆتهیتۆ",
+  "ڕهپیاز",
+  "کهباب",
+]);
+
 function kurdishLetters(s) {
   return s
     .replaceAll("\u0643", "\u06A9")
     .replaceAll("\u064A", "\u06CC")
-    .replace(/(\S)\u0647(?![\u06D5\u0627])/g, "$1\u06D5");
+    .replace(/\p{L}+/gu, (word) => {
+      if (!word.slice(1).includes("\u0647")) return word;
+      if (HEH_IS_CONSONANT.has(word)) return word;
+      if (!HEH_IS_VOWEL.has(word)) {
+        throw new Error(
+          `"${word}" carries a heh this script has not been told about. Which ` +
+            `it is cannot be read off the letters, so add it to HEH_IS_CONSONANT ` +
+            `(a real /h/) or HEH_IS_VOWEL (the vowel) in scripts/menu-from-pdf.mjs.`,
+        );
+      }
+      return word[0] + word.slice(1).replaceAll("\u0647", "\u06D5");
+    });
 }
 
-/** Lines the source splits mid-sentence, with no space at the break. */
-const JOINS = {
-  ar: { السميدالمفتول: "السميد المفتول", الثوميُقدّم: "الثوم يُقدّم" },
-  ku: { قیمەبەدۆشاوی: "قیمە بە دۆشاوی" },
-};
+/*
+ * There used to be a JOINS map here for three lines the source "split without
+ * a space" — السميد المفتول, الثوم يُقدّم and قیمە بە دۆشاوی. They were not
+ * missing spaces in the source at all: each is an ordinary word space that
+ * the old parser dropped, because it concatenated every run on a baseline
+ * regardless of the distance between them. joinRow() measures that distance,
+ * so all three now come out with their space and the map is gone.
+ */
+
+/** Entries seen to fire, so a stale one can be reported at the end of a run. */
+const ligaturesUsed = new Set();
 
 const fix = (s, lang) => {
   if (!s) return s;
-  let out = s;
+  // Unambiguous half of the transposition: a hamza-bearing alef is never
+  // followed by a lam in these menus except as a reversed ligature.
+  let out = s.replace(HAMZA_ALEF_LAM, "ل$1");
   // Bounded by non-letters so an attached quote or comma still matches, while
   // a key that merely appears inside a longer word does not.
-  for (const [from, to] of Object.entries(JOINS[lang] ?? {})) {
-    out = out.replaceAll(from, to);
-  }
   for (const [from, to] of Object.entries(LIGATURES[lang] ?? {})) {
-    out = out.replace(new RegExp(`(?<!\\p{L})${from}(?!\\p{L})`, "gu"), to);
+    const re = new RegExp(`(?<!\\p{L})${from}(?!\\p{L})`, "gu");
+    if (re.test(out)) ligaturesUsed.add(`${lang}:${from}`);
+    out = out.replace(re, to);
   }
   return out.replace(/\s+/g, " ").trim();
 };
+
+/**
+ * Text of a zero-width overlay glyph. Where the overlay carries a letter, the
+ * shadda in front of it is the cmap's, not the page's, and goes; a leading
+ * mark that survives is put back after the letter it sits on. An overlay that
+ * is nothing but a mark is a real diacritic — the heading نيّ is set that way —
+ * so it is kept and placed by `attachMarks`.
+ */
+const overlay = (s) =>
+  (/\p{L}/u.test(s) ? s.replaceAll(SHADDA, "") : s).replace(/^(\p{Mn})(\P{Mn})/u, "$2$1");
+
+/*
+ * Rejoining a line of type.
+ *
+ * pdf.js reports each run's width in the same space as its x, so the two can
+ * be compared: a run's trailing edge is x + w one way and x the other, and the
+ * distance to the next run is a real measurement. Two kinds of run follow
+ * another one, and they need different limits.
+ *
+ * A run opening with a combining mark is a continuation whatever the distance
+ * looks like, because the base glyph's advance does not account for the mark;
+ * in Arabic these reach 0.95em. It joins with no space, and that is what was
+ * truncating "لَبنة" to "ل" and "محمّرة" to "مح".
+ *
+ * Any other run is part of the same line only if it is close. Measured over
+ * all three menus the widest such gap is 0.28em — an ordinary word space,
+ * which is how "PINK 75" and "| ٣ دانە" belong to the names they follow —
+ * while the narrowest gap between two columns is 1.15em. That 1.15em is in
+ * English, whose layout is far tighter than the Arabic and Kurdish 4.79em, so
+ * it is the number that sets the limit. Cutting at 0.6em sits clear of both.
+ * Either error shows: too tight and a name loses its second half, too loose
+ * and it swallows its own description.
+ */
+const MERGE_EM = 0.6; // above the widest word space (0.28em), below the narrowest column gap (1.15em)
+const CONTINUE_EM = 2.0; // a combining mark may sit further out than its own advance
+const SPACE_EM = 0.05; // a split word sits at 0.00em; the narrowest real space is 0.07em
+const COMBINING = /^\p{Mn}/u;
+
+function joinRow(row) {
+  const out = [];
+  for (const c of row) {
+    const prev = out[out.length - 1];
+    const gap = prev ? (LTR ? c.x - (prev.x + prev.w) : prev.x - (c.x + c.w)) : Infinity;
+    const continues = COMBINING.test(c.s);
+    const limit = (continues ? CONTINUE_EM : MERGE_EM) * c.size;
+    if (prev && prev.size === c.size && gap < limit) {
+      const space = continues || gap < SPACE_EM * c.size ? "" : " ";
+      prev.s += space + c.s;
+      const left = Math.min(prev.x, c.x);
+      const right = Math.max(prev.x + prev.w, c.x + c.w);
+      prev.x = left;
+      prev.w = right - left;
+    } else {
+      out.push({ ...c });
+    }
+  }
+  return out;
+}
 
 /** Reads one language PDF into runs, repairing the font's glyph artefacts. */
 async function runs(file) {
@@ -122,28 +263,53 @@ async function runs(file) {
         size: Math.round(Math.hypot(it.transform[2], it.transform[3])),
         // Zero-width runs are overlay glyphs belonging after the run they
         // share an x with; their shadda is an artefact of the font cmap.
-        s: it.width === 0 ? it.str.replaceAll(SHADDA, "") : it.str,
+        // What is left can still lead with a combining mark, which is not
+        // well-formed — a mark belongs after the letter it sits on, so it is
+        // put back there. The corpus has one: "ُج" in جُزر, carrot.
+        s: it.width === 0 ? overlay(it.str) : it.str,
       });
     }
-    // Merge each row into positioned chunks (RTL: rightmost first).
+    // Merge each row into positioned chunks (RTL: rightmost first), first
+    // stacking the zero-width overlays onto the run they sit on, then
+    // rejoining the fragments the font split a line of type into.
     const chunks = [];
     for (const [y, cells] of rows) {
       cells.sort((a, b) => byReading(a, b) || b.w - a.w);
+      const row = [];
       let cur = null;
       for (const c of cells) {
         if (cur && Math.abs(cur.x - c.x) < 1e-6) {
           cur.s += c.s;
           cur.w = Math.max(cur.w, c.w);
         } else {
-          if (cur) chunks.push(cur);
+          if (cur) row.push(cur);
           cur = { y, x: c.x, w: c.w, size: c.size, s: c.s };
         }
       }
-      if (cur) chunks.push(cur);
+      if (cur) row.push(cur);
+      chunks.push(...joinRow(row));
     }
     pages.push(chunks);
   }
   return pages;
+}
+
+/**
+ * A chunk that is only a combining mark belongs to the glyph it is drawn over,
+ * which is the one whose span contains its x — not to whichever chunk happens
+ * to precede it in reading order. Headings can set the mark on its own
+ * baseline, so it arrives as a chunk of its own.
+ */
+function attachMarks(chunks) {
+  const marks = chunks.filter((c) => c.s && ![...c.s].some((ch) => !/\p{Mn}/u.test(ch)));
+  if (!marks.length) return chunks;
+  const out = chunks.filter((c) => !marks.includes(c));
+  for (const m of marks) {
+    const host = out.find((c) => m.x >= c.x && m.x <= c.x + c.w);
+    if (host) host.s += m.s;
+    else out.push(m);
+  }
+  return out;
 }
 
 function parsePage(chunks) {
@@ -163,8 +329,7 @@ function parsePage(chunks) {
     .map(([y, cs]) => ({
       y,
       s: clean(
-        cs
-          .sort(byReading)
+        attachMarks(cs.sort(byReading))
           .map((c) => c.s)
           .join(LTR ? " " : ""),
       ),
@@ -174,6 +339,8 @@ function parsePage(chunks) {
 
   const body = texts.filter((t) => t.size < 14);
   const used = new Set();
+  /** A baseline that carries a price starts a new item, so a description stops above it. */
+  const pricedRow = (y) => prices.some((q) => Math.abs(q.y - y) <= 4);
 
   const items = prices
     .sort((a, b) => b.y - a.y)
@@ -182,10 +349,17 @@ function parsePage(chunks) {
       // in the same column; list rows put it on the price's own baseline.
       // Try stacked first — on a stacked row the price's baseline also carries
       // the first line of the description, which would otherwise look like a name.
+      // A column is aligned on the edge its language starts reading from, so
+      // that is the edge to compare. Comparing the far edge instead made a
+      // long name look like it was in a different column from its own price,
+      // which dropped the name and promoted the description in its place.
       let name = body
         .filter(
           (t) =>
-            !used.has(t) && Math.abs(t.x - p.x) < 90 && t.y < p.y - 2 && p.y - t.y < 40,
+            !used.has(t) &&
+            Math.abs(startEdge(t) - startEdge(p)) < 90 &&
+            t.y < p.y - 2 &&
+            p.y - t.y < 40,
         )
         .sort((a, b) => b.y - a.y)[0];
       let descRuns;
@@ -202,14 +376,17 @@ function parsePage(chunks) {
         if (!sameRow.length) return null;
         name = sameRow.sort(byReading)[0];
         descRuns = sameRow.filter((t) => t !== name);
-        // A list row's description, when it has one, sits under the name.
+        // A list row's description, when it has one, sits under the name and
+        // is aligned with it. What ends it is the next priced row, not a drop
+        // in size: the tea selection sets its description at the same size as
+        // the name, which is why its two lines used to be thrown away.
         descRuns.push(
           ...body.filter(
             (t) =>
               !used.has(t) &&
               t !== name &&
-              t.size < name.size &&
-              Math.abs(t.x - name.x) < 40 &&
+              !pricedRow(t.y) &&
+              Math.abs(startEdge(t) - startEdge(name)) < 40 &&
               t.y < name.y - 2 &&
               name.y - t.y < 34,
           ),
@@ -345,5 +522,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       `${lang}: ${n} items in ${Object.values(menu).reduce((a, c) => a + c.sections.length, 0)} sections`,
     );
   }
-  console.log("Run `npm run format` afterwards, then scripts/audit-prices.mjs.");
+  // A ligature entry that never fires is either stale or misspelled, and
+  // either way it is not doing the job it looks like it is doing. The bare-alef
+  // list cannot be replaced by a rule, so the least it can do is stay honest.
+  const stale = [];
+  for (const [lang, map] of Object.entries(LIGATURES))
+    for (const from of Object.keys(map))
+      if (!ligaturesUsed.has(`${lang}:${from}`)) stale.push(`${lang}: ${from}`);
+  if (stale.length) {
+    console.log(`\n${stale.length} LIGATURES entries matched nothing:`);
+    for (const line of stale) console.log(`  ${line}`);
+    console.log("  Remove them, or check the spelling against the text layer.");
+  }
+  console.log("\nRun `npm run format` afterwards, then scripts/audit-prices.mjs.");
 }

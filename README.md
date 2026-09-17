@@ -164,10 +164,29 @@ Do not edit `src/lib/menu/ar.ts` or `ku.ts` by hand — regenerate them.
 `src/lib/menu/en.ts` is hand-written but was verified against the same text
 layer, item for item.
 
-The PDF fonts have three quirks the script repairs: the lam-alef ligature comes
-out with its letters transposed, some dal glyphs are emitted as zero-width
-overlays, and a few Kurdish letters are mapped onto Arabic lookalikes. Each
-repair is an explicit, commented list rather than a blanket rule.
+The PDF fonts have four quirks the script repairs, and where a quirk can be
+recognised from the page rather than from a list of known-bad words, it is:
+
+- **A word is split across runs** wherever a glyph needs its own run, usually
+  at a diacritic — "لَبنة" arrives as "ل" + "َبنة". `joinRow()` measures the
+  distance between runs and rejoins them. The measurement is safe because the
+  distances are bimodal: nothing inside a line of type exceeds 0.95em and
+  nothing between two columns is under 4.79em. A run that opens with a
+  combining mark is always a continuation, whatever the distance.
+- **Some dal glyphs are zero-width overlays** on the run they follow. The
+  cmap's spurious shadda is dropped; a combining mark left leading the run is
+  put back after its letter, which is where Unicode requires it.
+- **The lam-alef ligature is transposed.** With a hamza-bearing alef this is
+  unambiguous and is repaired by rule. With a bare alef it is not — that is
+  also how the Arabic definite article is spelled, and 96 Arabic words here
+  have that shape while only 11 are broken — so those stay an exact-match list,
+  and the script now reports any entry in it that stopped matching.
+- **Kurdish letters are mapped onto Arabic lookalikes.** Kaf and yeh are
+  unconditional. Heh is not: the font sets both the vowel ە and a real /h/ as
+  the same codepoint, and the surrounding letters do not tell them apart —
+  سرکهی needs the vowel and ڕاهیب needs the consonant, with the same heh before
+  the same yeh. So every word in the corpus carrying a heh is classified
+  explicitly, and an unknown one stops the run rather than being guessed at.
 
 ### Checking the menu
 
