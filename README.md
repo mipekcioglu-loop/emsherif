@@ -133,10 +133,21 @@ from the mean than a grey plate does, and the palest food is the same tone as
 the paper behind it. Detail does: the seamless is smooth, a dish has edges.
 
 Where a dish was shot too close for the crop to fit around it, the canvas is
-extended by continuing the seamless outwards rather than the dish being left
-oversized, capped at 12% of the frame. Four frames are not 4:3 at all — two are
-portrait — and those are left wider than the rest rather than have the crop cut
-into the dish. `npm run photos` names every one of these.
+extended rather than the dish being left oversized, capped at 12% of the frame.
+Four frames are not 4:3 at all — two are portrait — and those are left wider
+than the rest rather than have the crop cut into the dish. `npm run photos`
+names every one of these.
+
+**How the canvas is extended matters more than it sounds.** The seamless is
+vignetted — still falling off in brightness where it runs off the edge of the
+frame — so repeating the edge pixel, or any single colour, puts something flat
+against something graded and the join shows as a line down the picture. That
+happened on 36 of the 99 and had to be found by measurement, not by eye.
+Reflecting the frame has no such join, but folds the dish back into the margin
+as soon as the extension is deeper than the gap around it. So the background is
+extended as what it is: each edge's own tone and its own inward slope, averaged
+along the edge and continued outwards with an exponential damping. Tone and
+slope are both continuous across the join, and only background is ever read.
 
 The result is written as WebP at 340px and 540px: 99 photographs, 1.36 MB in
 total, about 7 KB each. The card well crops further to 3:2 on a phone, so two

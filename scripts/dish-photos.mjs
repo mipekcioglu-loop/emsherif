@@ -305,7 +305,7 @@ function gainsFor(background) {
  * Returns null when nothing stands out, and the caller falls back to the
  * centre crop.
  */
-async function findSubject(file) {
+export async function findSubject(file) {
   const { data, info } = await sharp(file)
     .resize(FIND_WIDTH, FIND_WIDTH, { fit: "inside" })
     .greyscale()
@@ -418,7 +418,7 @@ async function findSubject(file) {
  */
 const MAX_EXTEND = 0.12;
 
-function windowFor(subject, meta) {
+export function windowFor(subject, meta) {
   const bw = subject.wFrac * meta.width;
   const bh = subject.hFrac * meta.height;
   let height = Math.max(
@@ -470,29 +470,30 @@ function windowFor(subject, meta) {
 }
 
 /**
- * Extends a frame outwards by continuing its own edge.
+ * Extends a frame outwards by continuing the falloff of its own background.
  *
- * Not sharp's `extendWith: "copy"`, which repeats the outermost pixel exactly:
- * five of these frames have something dark sitting in one corner — the lip of
- * the backdrop, most likely — and repeating that one pixel paints a solid
- * block across the whole corner. Not a flat fill either, because the seamless
- * is vignetted and darkens towards its edges, so any single colour meets it
- * at a visible band.
+ * Three things do not work here, and the reason each fails says what is
+ * needed. The seamless is vignetted, so it is still changing in brightness
+ * when it runs off the edge of the frame:
  *
- * Instead each edge line is median-filtered along its length and that is what
- * gets repeated. The median follows the vignette but ignores a stray dark
- * pixel, so the extension continues the paper rather than the blemish.
+ *  - Repeating the edge pixel, or a median-filtered edge, puts a constant
+ *    column against a graded frame. That banded on 36 of the 99 frames.
+ *  - Reflecting the frame is continuous in tone, but it folds the dish back
+ *    into the margin as soon as the extension is deeper than the gap between
+ *    the dish and the edge — ghost copies of a sundae and arcs of pizza crust.
+ *
+ * So the background is extended as what it is: a smooth gradient. Each edge
+ * contributes its own tone and its own inward slope, both averaged along the
+ * edge so noise does not stripe, and that slope is continued outwards with an
+ * exponential damping so a long extension settles instead of running away.
+ * Tone and slope are both continuous across the join, which leaves nothing
+ * for a step to show up in, and only background is ever read, so nothing can
+ * be ghosted.
  */
-const EDGE_DEPTH = 3; // rows sampled inwards
-const EDGE_RUN = 9; // pixels sampled along the edge
-/**
- * How far inside the frame to read the edge from. Several frames have a dark
- * lip in the outermost row or two — the bottom of the backdrop — and
- * repeating that paints a grey band. The outer few pixels are read past, and
- * overwritten with what is just inside them, but only on a side the dish does
- * not reach: nothing that could be food is painted over.
- */
-const EDGE_INSET = 4;
+const EDGE_INSET = 4; // read past the backdrop's own lip at the frame edge
+const SLOPE_RUN = 24; // pixels inward used to measure the falloff
+const SLOPE_SMOOTH = 15; // rows averaged along the edge, to kill noise
+const DAMP = 60; // pixels over which the falloff is allowed to persist
 
 async function extendByEdge(buffer, pad, safe) {
   const { data, info } = await sharp(buffer)
@@ -504,64 +505,80 @@ async function extendByEdge(buffer, pad, safe) {
   const outH = H + pad.top + pad.bottom;
   const out = Buffer.alloc(outW * outH * 3);
 
-  // The rectangle the photograph is read from: pulled in on any side that is
-  // being extended and that the dish does not reach.
-  const in0x = pad.left && safe.left ? EDGE_INSET : 0;
-  const in1x = W - 1 - (pad.right && safe.right ? EDGE_INSET : 0);
-  const in0y = pad.top && safe.top ? EDGE_INSET : 0;
-  const in1y = H - 1 - (pad.bottom && safe.bottom ? EDGE_INSET : 0);
-
+  // Read past the outermost pixels on any side being extended that the dish
+  // does not reach: several frames carry a dark lip there.
+  const x0 = pad.left && safe.left ? EDGE_INSET : 0;
+  const x1 = W - 1 - (pad.right && safe.right ? EDGE_INSET : 0);
+  const y0 = pad.top && safe.top ? EDGE_INSET : 0;
+  const y1 = H - 1 - (pad.bottom && safe.bottom ? EDGE_INSET : 0);
   const at = (x, y, c) => data[(y * W + x) * C + c];
-  /** Median of a patch running along an edge, for one channel. */
-  const edgeMedian = (x, y, c, horizontal) => {
-    const v = [];
-    for (let d = 0; d < EDGE_DEPTH; d++) {
-      for (let k = -EDGE_RUN; k <= EDGE_RUN; k++) {
-        const xx = horizontal
-          ? Math.min(W - 1, Math.max(0, x + k))
-          : Math.min(W - 1, Math.max(0, x + (x === 0 ? d : -d)));
-        const yy = horizontal
-          ? Math.min(H - 1, Math.max(0, y + (y === 0 ? d : -d)))
-          : Math.min(H - 1, Math.max(0, y + k));
-        v.push(at(xx, yy, c));
-      }
+  const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
+
+  /** Tone and inward slope along one edge, per channel, smoothed lengthwise. */
+  const profile = (along, edge, axis) => {
+    const n = along.hi - along.lo + 1;
+    const tone = [];
+    const slope = [];
+    for (let i = 0; i < n; i++) {
+      const k = along.lo + i;
+      const sample = (depth) => {
+        const d = edge.inward * depth;
+        return [0, 1, 2].map((c) =>
+          axis === "x"
+            ? at(clamp(edge.at + d, x0, x1), k, c)
+            : at(k, clamp(edge.at + d, y0, y1), c),
+        );
+      };
+      const near = [0, 1, 2].map((c) => (sample(0)[c] + sample(1)[c] + sample(2)[c]) / 3);
+      const far = sample(SLOPE_RUN);
+      tone.push(near);
+      slope.push(near.map((v, c) => (far[c] - v) / SLOPE_RUN));
     }
-    v.sort((a, b) => a - b);
-    return v[v.length >> 1];
+    // Running mean along the edge.
+    const smooth = (arr) =>
+      arr.map((_, i) => {
+        const lo = Math.max(0, i - SLOPE_SMOOTH);
+        const hi = Math.min(arr.length - 1, i + SLOPE_SMOOTH);
+        const acc = [0, 0, 0];
+        for (let j = lo; j <= hi; j++) for (let c = 0; c < 3; c++) acc[c] += arr[j][c];
+        return acc.map((v) => v / (hi - lo + 1));
+      });
+    return { tone: smooth(tone), slope: smooth(slope), lo: along.lo, hi: along.hi };
   };
 
-  // Precompute the four smoothed edges once, read at the inset boundary.
-  const lines = { left: [], right: [], top: [], bottom: [] };
-  for (let y = 0; y < H; y++) {
-    lines.left.push([0, 1, 2].map((c) => edgeMedian(in0x, y, c, false)));
-    lines.right.push([0, 1, 2].map((c) => edgeMedian(in1x, y, c, false)));
-  }
-  for (let x = 0; x < W; x++) {
-    lines.top.push([0, 1, 2].map((c) => edgeMedian(x, in0y, c, true)));
-    lines.bottom.push([0, 1, 2].map((c) => edgeMedian(x, in1y, c, true)));
-  }
+  const damp = (d) => DAMP * (1 - Math.exp(-d / DAMP));
+  const edges = {};
+  if (pad.left) edges.left = profile({ lo: y0, hi: y1 }, { at: x0, inward: 1 }, "x");
+  if (pad.right) edges.right = profile({ lo: y0, hi: y1 }, { at: x1, inward: -1 }, "x");
+  if (pad.top) edges.top = profile({ lo: x0, hi: x1 }, { at: y0, inward: 1 }, "y");
+  if (pad.bottom) edges.bottom = profile({ lo: x0, hi: x1 }, { at: y1, inward: -1 }, "y");
+
+  const extend = (e, k, d, c) => {
+    const i = clamp(k, e.lo, e.hi) - e.lo;
+    return e.tone[i][c] - e.slope[i][c] * damp(d);
+  };
 
   for (let oy = 0; oy < outH; oy++) {
     const sy = oy - pad.top;
-    const cy = Math.min(in1y, Math.max(in0y, sy));
+    const cy = clamp(sy, y0, y1);
+    const dy = sy < y0 ? y0 - sy : sy > y1 ? sy - y1 : 0;
     for (let ox = 0; ox < outW; ox++) {
       const sx = ox - pad.left;
-      const cx = Math.min(in1x, Math.max(in0x, sx));
-      const i = (oy * outW + ox) * 3;
-      const outsideX = sx !== cx;
-      const outsideY = sy !== cy;
+      const cx = clamp(sx, x0, x1);
+      const dx = sx < x0 ? x0 - sx : sx > x1 ? sx - x1 : 0;
+      const to = (oy * outW + ox) * 3;
       for (let c = 0; c < 3; c++) {
         let v;
-        if (!outsideX && !outsideY) v = at(cx, cy, c);
-        else if (outsideX && !outsideY) v = (sx < 0 ? lines.left : lines.right)[cy][c];
-        else if (!outsideX && outsideY) v = (sy < 0 ? lines.top : lines.bottom)[cx][c];
+        if (!dx && !dy) v = at(cx, cy, c);
+        else if (dx && !dy) v = extend(sx < x0 ? edges.left : edges.right, cy, dx, c);
+        else if (!dx && dy) v = extend(sy < y0 ? edges.top : edges.bottom, cx, dy, c);
         else {
-          // A corner: the average of the two edges that meet there.
-          const h = (sx < 0 ? lines.left : lines.right)[cy][c];
-          const v2 = (sy < 0 ? lines.top : lines.bottom)[cx][c];
-          v = Math.round((h + v2) / 2);
+          // A corner: weight the two edges by how far out each one reaches.
+          const h = extend(sx < x0 ? edges.left : edges.right, cy, dx, c);
+          const w2 = extend(sy < y0 ? edges.top : edges.bottom, cx, dy, c);
+          v = (h * dy + w2 * dx) / (dx + dy);
         }
-        out[i + c] = v;
+        out[to + c] = clamp(Math.round(v), 0, 255);
       }
     }
   }
@@ -729,109 +746,111 @@ ${Object.keys(MENUS)
  * Run
  * ------------------------------------------------------------------ */
 
-const wantsReport = process.argv.includes("--report");
-const index = JSON.parse(fs.readFileSync(path.join(SOURCE, "index.json"), "utf8"));
-const report = {
-  verdicts: [],
-  passedThrough: [],
-  corrected: [],
-  framed: [],
-  extended: [],
-  centreCropped: [],
-  capped: [],
-  clipped: [],
-  grown: [],
-};
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const wantsReport = process.argv.includes("--report");
+  const index = JSON.parse(fs.readFileSync(path.join(SOURCE, "index.json"), "utf8"));
+  const report = {
+    verdicts: [],
+    passedThrough: [],
+    corrected: [],
+    framed: [],
+    extended: [],
+    centreCropped: [],
+    capped: [],
+    clipped: [],
+    grown: [],
+  };
 
-const mapping = buildMapping(index, report);
+  const mapping = buildMapping(index, report);
 
-fs.rmSync(OUT_IMAGES, { recursive: true, force: true });
-fs.mkdirSync(OUT_IMAGES, { recursive: true });
+  fs.rmSync(OUT_IMAGES, { recursive: true, force: true });
+  fs.mkdirSync(OUT_IMAGES, { recursive: true });
 
-const slugs = new Set(Object.values(mapping.perLanguage.en));
-let bytes = 0;
-for (const slug of [...slugs].sort()) {
-  const entry = Object.values(index).find(
-    (e) => path.basename(e.photo, path.extname(e.photo)) === slug,
-  );
-  bytes += await processPhoto(path.join(SOURCE, entry.photo), slug, report);
-}
-
-fs.writeFileSync(OUT_MODULE, moduleSource(mapping));
-
-const dishes = CATEGORIES.reduce(
-  (total, category) =>
-    total + englishMenu[category].sections.reduce((n, s) => n + s.items.length, 0),
-  0,
-);
-const placed = Object.keys(mapping.perLanguage.en).length;
-console.log(
-  `${slugs.size} photographs -> ${WIDTHS.length} widths each, ` +
-    `${(bytes / 1024 / 1024).toFixed(2)} MB in public/dishes`,
-);
-console.log(
-  `${placed} of ${dishes} dishes carry a photograph; ` +
-    `${dishes - placed} fall back to the wordmark card`,
-);
-if (report.passedThrough.length) {
-  console.log(
-    `\n${report.passedThrough.length} left unbalanced — no seamless to measure:`,
-  );
-  for (const line of report.passedThrough) console.log(`  ${line}`);
-}
-if (report.framed.length) {
-  const scales = report.framed.map((f) => f.was).sort((a, b) => a - b);
-  console.log(
-    `\n${report.framed.length} frames re-framed to a constant dish size. Before, the dish ` +
-      `filled\n  between ${(scales[0] * 100).toFixed(0)}% and ${(scales[scales.length - 1] * 100).toFixed(0)}% of its frame ` +
-      `(${(scales[scales.length - 1] / scales[0]).toFixed(1)}x); every card now shows it at ` +
-      `${(SUBJECT_TARGET * 100).toFixed(0)}% of the phone well.`,
-  );
-}
-if (report.centreCropped.length) {
-  console.log(
-    `\n${report.centreCropped.length} kept the centre crop — no seamless to measure, so no dish to find:`,
-  );
-  for (const slug of report.centreCropped) console.log(`  ${slug}`);
-}
-if (report.extended.length) {
-  console.log(
-    `\n${report.extended.length} were shot close enough that the frame had to be extended with the` +
-      `\n  seamless neutral to bring the dish down to size:`,
-  );
-  for (const line of report.extended) console.log(`  ${line}`);
-}
-if (report.capped.length) {
-  console.log(
-    `\n${report.capped.length} could not reach the target without inventing more than ` +
-      `${(MAX_EXTEND * 100).toFixed(0)}% of the\n  frame, so they keep a dish larger than the rest:`,
-  );
-  for (const slug of report.capped) console.log(`  ${slug}`);
-}
-if (report.grown.length) {
-  console.log(
-    `\n${report.grown.length} were left wider than the target rather than lose part of the dish` +
-      `\n  — these are the frames that are not 4:3, so a card cannot match them:`,
-  );
-  for (const line of report.grown) console.log(`  ${line}`);
-}
-if (report.clipped.length) {
-  console.log(
-    `\n${report.clipped.length} LOSE PART OF THE DISH at the edge of the window:`,
-  );
-  for (const line of report.clipped) console.log(`  ${line}`);
-}
-if (report.verdicts.length) {
-  console.log(`\n${report.verdicts.length} identifications the shoot flagged itself:`);
-  for (const line of report.verdicts) console.log(`  ${line}`);
-}
-if (wantsReport) {
-  console.log("\nwhite balance applied (background R,G,B -> gains):");
-  for (const { slug, background, gains } of report.corrected) {
-    console.log(
-      `  ${slug.padEnd(30)} ` +
-        `${background.r.toFixed(0)},${background.g.toFixed(0)},${background.b.toFixed(0)}` +
-        ` -> ${gains.map((g) => g.toFixed(3)).join(", ")}`,
+  const slugs = new Set(Object.values(mapping.perLanguage.en));
+  let bytes = 0;
+  for (const slug of [...slugs].sort()) {
+    const entry = Object.values(index).find(
+      (e) => path.basename(e.photo, path.extname(e.photo)) === slug,
     );
+    bytes += await processPhoto(path.join(SOURCE, entry.photo), slug, report);
+  }
+
+  fs.writeFileSync(OUT_MODULE, moduleSource(mapping));
+
+  const dishes = CATEGORIES.reduce(
+    (total, category) =>
+      total + englishMenu[category].sections.reduce((n, s) => n + s.items.length, 0),
+    0,
+  );
+  const placed = Object.keys(mapping.perLanguage.en).length;
+  console.log(
+    `${slugs.size} photographs -> ${WIDTHS.length} widths each, ` +
+      `${(bytes / 1024 / 1024).toFixed(2)} MB in public/dishes`,
+  );
+  console.log(
+    `${placed} of ${dishes} dishes carry a photograph; ` +
+      `${dishes - placed} fall back to the wordmark card`,
+  );
+  if (report.passedThrough.length) {
+    console.log(
+      `\n${report.passedThrough.length} left unbalanced — no seamless to measure:`,
+    );
+    for (const line of report.passedThrough) console.log(`  ${line}`);
+  }
+  if (report.framed.length) {
+    const scales = report.framed.map((f) => f.was).sort((a, b) => a - b);
+    console.log(
+      `\n${report.framed.length} frames re-framed to a constant dish size. Before, the dish ` +
+        `filled\n  between ${(scales[0] * 100).toFixed(0)}% and ${(scales[scales.length - 1] * 100).toFixed(0)}% of its frame ` +
+        `(${(scales[scales.length - 1] / scales[0]).toFixed(1)}x); every card now shows it at ` +
+        `${(SUBJECT_TARGET * 100).toFixed(0)}% of the phone well.`,
+    );
+  }
+  if (report.centreCropped.length) {
+    console.log(
+      `\n${report.centreCropped.length} kept the centre crop — no seamless to measure, so no dish to find:`,
+    );
+    for (const slug of report.centreCropped) console.log(`  ${slug}`);
+  }
+  if (report.extended.length) {
+    console.log(
+      `\n${report.extended.length} were shot close enough that the frame had to be extended with the` +
+        `\n  seamless neutral to bring the dish down to size:`,
+    );
+    for (const line of report.extended) console.log(`  ${line}`);
+  }
+  if (report.capped.length) {
+    console.log(
+      `\n${report.capped.length} could not reach the target without inventing more than ` +
+        `${(MAX_EXTEND * 100).toFixed(0)}% of the\n  frame, so they keep a dish larger than the rest:`,
+    );
+    for (const slug of report.capped) console.log(`  ${slug}`);
+  }
+  if (report.grown.length) {
+    console.log(
+      `\n${report.grown.length} were left wider than the target rather than lose part of the dish` +
+        `\n  — these are the frames that are not 4:3, so a card cannot match them:`,
+    );
+    for (const line of report.grown) console.log(`  ${line}`);
+  }
+  if (report.clipped.length) {
+    console.log(
+      `\n${report.clipped.length} LOSE PART OF THE DISH at the edge of the window:`,
+    );
+    for (const line of report.clipped) console.log(`  ${line}`);
+  }
+  if (report.verdicts.length) {
+    console.log(`\n${report.verdicts.length} identifications the shoot flagged itself:`);
+    for (const line of report.verdicts) console.log(`  ${line}`);
+  }
+  if (wantsReport) {
+    console.log("\nwhite balance applied (background R,G,B -> gains):");
+    for (const { slug, background, gains } of report.corrected) {
+      console.log(
+        `  ${slug.padEnd(30)} ` +
+          `${background.r.toFixed(0)},${background.g.toFixed(0)},${background.b.toFixed(0)}` +
+          ` -> ${gains.map((g) => g.toFixed(3)).join(", ")}`,
+      );
+    }
   }
 }
