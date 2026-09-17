@@ -105,7 +105,7 @@ export const kurdishMenu: LanguageMenu = {
             name: "فەتەی باینجان",
             description:
               "باینجانی تامدارکراو، ماست، نانی عەرەبیی برژاو، رەێحان و دەنکە سنۆبەری برژاو",
-            price: 12000,
+            price: 12500,
           },
           {
             name: "فەتەی مەفتوول",
@@ -432,7 +432,7 @@ export const kurdishMenu: LanguageMenu = {
             name: "شفتەی برژاو (کەبابی لوبنانی)",
             description:
               "کەباب، مەعدەنووس، تەماتە، بیبەری توون، پیاز، لەگەڵ برنجی بە تەماتە ۆ باینجان پێشکەش دەکرێت",
-            price: 26000,
+            price: 26500,
           },
           {
             name: "تکەی مریشک",
@@ -455,13 +455,13 @@ export const kurdishMenu: LanguageMenu = {
             name: "کوبەی گۆشت بە ماست",
             description:
               "گۆشتی بەرخی بە هێواشی لێنراو، کۆبەی گۆشت و بروێش، گۆشتی وورد کراو و دەنکە سنۆبەر لەگەڵ ماست",
-            price: 31000,
+            price: 24000,
           },
           {
             name: "گۆشتی بەرخ و فاسولیا",
             description:
               "قاچی بەرخ لەگەڵ فاسولیا لە سۆسی تەماتە، لەگەڵ برنجی سپی پێشکەش دەکرێت",
-            price: 34000,
+            price: 39000,
           },
           {
             name: "ستێکی گۆشت و پەتاتە",
@@ -686,11 +686,11 @@ export const kurdishMenu: LanguageMenu = {
           },
           {
             name: "ئێسپریسۆ دۆپیۆ",
-            price: 7000,
+            price: 9500,
           },
           {
             name: "کاپوچینۆ",
-            price: 9500,
+            price: 10000,
           },
           {
             name: "کافێ لاتی",
@@ -698,11 +698,11 @@ export const kurdishMenu: LanguageMenu = {
           },
           {
             name: "کافێ بلانک",
-            price: 10000,
+            price: 6000,
           },
           {
             name: "قاوەی ئەمریکی",
-            price: 6000,
+            price: 7000,
           },
           {
             name: "فلات وایت",

@@ -1,17 +1,20 @@
 /**
  * Two questions about prices, answered separately because they are different
- * questions and the answers are no longer the same.
+ * questions with different answers.
  *
- * 1. DO THE PRINTED MENUS AGREE WITH EACH OTHER? They do not, in six places,
- *    and the client has now decided all six (docs/menu-discrepancies.md §1 and
- *    §2). Those are reported as settled, with the decision, so nobody re-running
- *    this mistakes them for transcription errors and "fixes" them back.
- * 2. DOES THE SITE QUOTE ONE PRICE PER DISH? It must. Every dish should cost
- *    the same whichever language a guest reads, and any disagreement here is a
- *    real fault in our data.
+ * 1. DO THE PRINTED MENUS AGREE WITH EACH OTHER? They do not, in eight places
+ *    (docs/menu-discrepancies.md §1 and §2). These are faults in the source
+ *    menus, not in our transcription, and only the café can resolve them. They
+ *    are reported as outstanding, because they are.
+ * 2. DOES THE SITE REPRODUCE EACH PRINTED PAGE? It must — that is the rule in
+ *    CLAUDE.md, and it is why question 1's answer is left alone rather than
+ *    reconciled. `en.ts` is hand-written, so it is checked against the English
+ *    PDF; `ar.ts` and `ku.ts` are generated, so they are checked against a
+ *    fresh parse, which catches a stale file or a hand-edit.
  *
- * The exit code answers "is anything outstanding": a printed disagreement that
- * nobody has decided, or the site contradicting itself.
+ * A dish costing two different things in two languages is therefore expected
+ * here and is not a bug: it means two printed pages disagree. What would be a
+ * bug is the site saying something neither page says, which is question 2.
  *
  * `pdfjs-dist` is not a project dependency — install it only to run this:
  *   npm i -D pdfjs-dist && node scripts/audit-prices.mjs && npm uninstall pdfjs-dist
@@ -36,18 +39,6 @@ const ORDER = {
  * Same table as ITEM_OVERRIDES in scripts/dish-photos.mjs.
  */
 const ITEM_ORDER = { "ar:drinks:4": [0, 2, 3, 4, 5, 1, null, 7, 8] };
-
-/** The six disagreements the client has ruled on, and what they chose. */
-const SETTLED = {
-  "FATTET BATENJEN": "12,000, the English and Arabic figure (§1)",
-  KEFTA: "26,000, the English and Arabic figure (§1)",
-  "KIBBET LAHMEH BI LABAN": "31,000, the English and Arabic figure (§1)",
-  "FASSOULYA BI LAHMEH": "34,000, the Arabic figure (§1)",
-  "ESPRESSO DOPPIO": "7,000, the Arabic page's pairing (§2)",
-  CAPPUCCINO: "9,500, the Arabic page's pairing (§2)",
-  "CAFÉ BLANC": "10,000, the Arabic page's pairing (§2)",
-  "AMERICAN COFFEE": "6,000, the Arabic page's pairing (§2)",
-};
 
 const english = await parseMenu("public/menus/en-menu.pdf", true);
 const byPage = new Map(english.map((p) => [p.page, p]));
@@ -103,13 +94,9 @@ function walk(sections, visit) {
 }
 
 let outstanding = 0;
-const settledSeen = [];
 
 // ---- 1. The printed menus, as printed. -----------------------------------
-const printed = {
-  ar: await buildLanguage("ar", { printedPrices: true }),
-  ku: await buildLanguage("ku", { printedPrices: true }),
-};
+const printed = { ar: await buildLanguage("ar"), ku: await buildLanguage("ku") };
 console.log("The printed menus, compared with each other:\n");
 walk(
   (lang, category) =>
@@ -129,55 +116,81 @@ walk(
     // drinks list, not in a price, and §2 records it.
     const prices = [en?.price, ar?.price, ku?.price].filter((p) => p !== undefined);
     if (new Set(prices).size <= 1) return;
-    const decision = SETTLED[en.name];
-    const line =
-      `${row.category} / ${row.section} #${row.i + 1}  "${en.name}"\n` +
-      `       EN ${money(en?.price)}   AR ${money(ar?.price)}${ar ? ` (${ar.name})` : ""}` +
-      `   KU ${money(ku?.price)}`;
-    if (decision) {
-      settledSeen.push(`${line}\n       settled: ${decision}`);
-    } else {
-      console.log(`PRICE  ${line}`);
-      outstanding++;
-    }
-  },
-);
-if (settledSeen.length) {
-  console.log(
-    `${settledSeen.length} disagreements between the printed menus, all decided by the client.\n` +
-      `These are not errors and must not be "corrected" back:\n`,
-  );
-  for (const l of settledSeen) console.log(`  ${l}\n`);
-}
-if (!outstanding) console.log("No undecided disagreement between the printed menus.\n");
-
-// ---- 2. What the site actually quotes. -----------------------------------
-const shipped = { en: englishMenu, ar: arabicMenu, ku: kurdishMenu };
-let mismatches = 0;
-walk(
-  (lang, category) => shipped[lang][category].sections,
-  (row) => {
-    if (row.missing) return; // already reported above
-    const { en, ar, ku } = row;
-    const prices = [en?.price, ar?.price, ku?.price].filter((p) => p !== undefined);
-    if (new Set(prices).size <= 1) return;
-    mismatches++;
     console.log(
-      `SITE   ${row.category} / ${row.section} #${row.i + 1}  "${en.name}" is quoted differently ` +
-        `by language:\n       EN ${money(en?.price)}   AR ${money(ar?.price)}   KU ${money(ku?.price)}`,
+      `PRICE  ${row.category} / ${row.section} #${row.i + 1}  "${en.name}"\n` +
+        `       EN ${money(en?.price)}   AR ${money(ar?.price)}${ar ? ` (${ar.name})` : ""}` +
+        `   KU ${money(ku?.price)}`,
     );
+    outstanding++;
   },
 );
+console.log(
+  outstanding
+    ? `\n${outstanding} disagreements between the printed menus. These are faults in the\n` +
+        `source menus and only the café can resolve them — see docs/menu-discrepancies.md.\n` +
+        `The site reproduces each language as printed, so do not reconcile them here.\n`
+    : "No disagreement between the printed menus.\n",
+);
+
+// ---- 2. Does the site say what the page says? ----------------------------
+// This is the check that matters now: a price on the site that is on none of
+// the printed pages. `en.ts` is typed by hand, so it is compared against the
+// English PDF dish by dish; ar.ts and ku.ts are generated, so they are compared
+// against a fresh parse, which catches a stale committed file or a hand-edit.
+const shipped = { en: englishMenu, ar: arabicMenu, ku: kurdishMenu };
+const source = {
+  en: (category) => englishSections(EN_PAGES[category]),
+  ar: (category) => printed.ar[category].sections,
+  ku: (category) => printed.ku[category].sections,
+};
+let mismatches = 0;
+for (const lang of ["en", "ar", "ku"]) {
+  for (const category of ["food", "sweets", "drinks"]) {
+    const pages = source[lang](category);
+    const ours = shipped[lang][category].sections;
+    if (pages.length !== ours.length) {
+      console.log(
+        `SITE   ${lang} ${category}: ${ours.length} sections on the site, ${pages.length} in the source`,
+      );
+      mismatches++;
+      continue;
+    }
+    pages.forEach((sec, s) => {
+      sec.items.forEach((printedItem, i) => {
+        const mine = ours[s].items[i];
+        if (!mine) {
+          console.log(
+            `SITE   ${lang} ${category} / ${sec.title} #${i + 1} is missing from the site`,
+          );
+          mismatches++;
+          return;
+        }
+        if (mine.price !== printedItem.price) {
+          mismatches++;
+          console.log(
+            `SITE   ${lang} ${category} / ${sec.title} #${i + 1} "${mine.name}": the site says ` +
+              `${money(mine.price)} but the page says ${money(printedItem.price)}`,
+          );
+        }
+      });
+    });
+  }
+}
 console.log(
   mismatches
-    ? `\n${mismatches} dishes are quoted at different prices depending on the language read. Fix these.`
-    : "The site quotes one price per dish in all three languages.",
+    ? `\n${mismatches} prices on the site are not what the printed page says. Fix these.`
+    : "Every price on the site is the one its own language's page prints.",
 );
 
+// Non-zero while anything is open, but the two are not the same kind of open:
+// `mismatches` is ours to fix, `outstanding` is the café's to answer.
 const total = outstanding + mismatches;
-console.log(
-  total
-    ? `\n${total} things need attention — see docs/menu-discrepancies.md`
-    : "\nNothing outstanding.",
-);
+if (total) {
+  console.log(
+    `\n${outstanding} awaiting the café, ${mismatches} to fix here ` +
+      `— see docs/menu-discrepancies.md`,
+  );
+} else {
+  console.log("\nNothing outstanding.");
+}
 process.exitCode = total ? 1 : 0;

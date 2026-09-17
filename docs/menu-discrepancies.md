@@ -3,14 +3,14 @@
 Found by comparing the three printed menus against each other. All of these are
 differences **in the source menus**, not transcription errors.
 
-The site used to reproduce each language exactly as printed, which meant every
-one of these was live in at least one language. That is no longer true of the
-prices: the client has ruled on §1 and §2, so eight dishes and drinks now carry
-a decided price in all three languages and **the site deliberately differs from
-the printed English and Kurdish pages for those eight**. Each one is tabled
-below with what the pages say, what was decided, and where the override lives.
-Everything else — every name, every description, every other price — is still
-the printed page, character for character.
+The website reproduces each language exactly as printed, so every one of these
+is currently live on the site in at least one language. That is deliberate: the
+rule in `CLAUDE.md` is that menu content matches the printed menus exactly and
+that disagreements between them are recorded here rather than reconciled.
+
+**This was reconsidered once, and the rule was upheld** — see "The decision that
+was taken and reversed" below, so the same ground is not covered again from
+scratch.
 
 Re-run the check any time the menus change:
 
@@ -62,31 +62,15 @@ the kitchen will not honour.
 The odd one out is bolded. All four are in the combined document too, at the
 same values — see above — so no document could settle them.
 
-### Settled: the client chose the Arabic figure
+All four are in the combined document too, at the same values — see above — so
+no document can settle them. **They are open**, the site reproduces each
+language as printed, and only the café can say which figure a guest should be
+charged.
 
-**The site no longer matches the printed English and Kurdish pages for these
-four.** That is a deliberate departure from the rule that menu content
-reproduces the printed menus exactly, made on the client's instruction after
-they were shown the evidence above. It is not a transcription fix, and it must
-not be "corrected" back.
-
-| Dish                   | Printed en | Printed ar | Printed ku | All three now | Which language it came from |
-| ---------------------- | ---------- | ---------- | ---------- | ------------- | --------------------------- |
-| Fattet Batenjen        | 12,000     | 12,000     | 12,500     | **12,000**    | Arabic (English agreed)     |
-| Kefta                  | 26,000     | 26,000     | 26,500     | **26,000**    | Arabic (English agreed)     |
-| Kibbet Lahmeh bi Laban | 31,000     | 31,000     | 24,000     | **31,000**    | Arabic (English agreed)     |
-| Fassoulya bi Lahmeh    | 39,000     | 34,000     | 39,000     | **34,000**    | Arabic                      |
-
-Three of them correct Kurdish alone. **Fassoulya bi Lahmeh is the one that moves
-English and Kurdish down**, 39,000 to 34,000, so a guest reading either of those
-pages is charged 5,000 IQD less than the menu in their hand says. That was the
-client's decision, taken with the numbers in front of them.
-
-Where each change lives: Kurdish in `CLIENT_PRICES` in
-`scripts/menu-from-pdf.mjs`, keyed by position and asserting the printed value
-it replaces, so a re-parse that lands differently stops the run rather than
-repricing the wrong dish. English in `src/lib/menu/en.ts`, which is
-hand-written, commented at the dish. Arabic is untouched.
+Kibbet Lahmeh bi Laban is the largest gap: a guest reading the Kurdish menu is
+quoted 7,000 IQD less than one reading English, for the same dish at the same
+table. The straight question to put to the café is four lines long: for each
+dish, which price is right, and should the other languages be corrected to it?
 
 ## 2. The Arabic hot-drinks list is shifted against its prices
 
@@ -119,42 +103,27 @@ The effect is that four drinks cost something different depending on which menu
 a guest reads: against the Arabic page a cappuccino is 500 cheaper, a café blanc
 4,000 dearer, an american 1,000 cheaper and a doppio 2,500 cheaper.
 
-### Settled: the client chose the Arabic page's pairing
+**This is open too.** Four drinks cost something different depending on which
+menu a guest reads:
 
-**The site no longer matches the printed English and Kurdish pages for these
-four drinks.** As with §1 this is a deliberate departure, on the client's
-instruction, and not a transcription fix.
+| Drink           | Printed en / ku | Printed ar | Gap                        |
+| --------------- | --------------- | ---------- | -------------------------- |
+| Espresso Doppio | 9,500           | 7,000      | 2,500 cheaper in Arabic    |
+| Cappuccino      | 10,000          | 9,500      | 500 cheaper in Arabic      |
+| Café Blanc      | 6,000           | 10,000     | **4,000 dearer in Arabic** |
+| American Coffee | 7,000           | 6,000      | 1,000 cheaper in Arabic    |
 
-| Drink           | Printed en / ku | Arabic | All three now | Move             |
-| --------------- | --------------- | ------ | ------------- | ---------------- |
-| Espresso Doppio | 9,500           | 7,000  | **7,000**     | −2,500           |
-| Cappuccino      | 10,000          | 9,500  | **9,500**     | −500             |
-| Café Blanc      | 6,000           | 10,000 | **10,000**    | **+4,000, +67%** |
-| American Coffee | 7,000           | 6,000  | **6,000**     | −1,000           |
+Espresso, Café Latte, Kahweh Loubnaniyeh and Tea Selection land on the same
+price in every language and are not in question. Flat White is a separate
+matter again: the Arabic page has a decaf espresso on that row, which is a
+difference in the drinks list rather than in a price.
 
-**Café Blanc is the one to watch**: 6,000 to 10,000 is a two-thirds rise for
-every English- and Kurdish-reading guest, and the largest single move in either
-section. Espresso, Café Latte, Kahweh Loubnaniyeh and Tea Selection already
-agreed and are untouched.
-
-**Flat White is untouched**, at 10,000. The Arabic page has a decaf espresso on
-that row — a different drink, not a different price — and the decision was about
-which drink carries which price, not about changing the drinks list. So English
-and Kurdish keep Flat White, the Arabic keeps its اسبريسو بدون كافيين, and no
-drink was added, removed or renamed in any language.
-
-One consequence worth stating, because it is the opposite of what §2 used to
-say: the nine printed prices are no longer a column that reads the same in every
-language. Each _drink_ now costs the same everywhere, which is the point; but
-because the three menus list their drinks in different orders, reading the price
-column straight down an English page and an Arabic page now gives two different
-sequences. Comparing this section row by row is therefore meaningless, and
-`scripts/audit-prices.mjs` compares it by drink.
-
-Where each change lives: Kurdish in `CLIENT_PRICES` in
-`scripts/menu-from-pdf.mjs`, keyed by position and asserting the printed value
-it replaces. English in `src/lib/menu/en.ts`, commented at each drink. Arabic is
-untouched — it already read this way.
+This one is not a choice between two figures per drink the way §1 is. The
+Arabic page prices a doppio the same as a single espresso and makes café blanc
+dearer than a cappuccino, which reads more like a column that slipped during
+typesetting than a price list. Asking the café which figure is right, drink by
+drink, may get a confusing answer; asking them to confirm the Arabic page's
+drink order and prices as a whole is probably the better question.
 
 ### It still reaches the photography, for a different reason
 
@@ -165,6 +134,45 @@ because the Arabic page lists its drinks in a different order, so its fourth row
 is not the fourth English drink, and matching photographs by row would put the
 doppio's cup on the cappuccino. The decaf espresso, which the other two menus do
 not list, has no photograph and falls back to the wordmark card.
+
+## The decision that was taken and reversed
+
+**17 September 2026.** §1 and §2 were put to the client, who decided that the
+Arabic page should be authoritative and that all three languages should carry
+its figures. That was implemented, and then reversed: asked whether the rule in
+`CLAUDE.md` — menu content matches the printed menus exactly — should be amended
+to accommodate it, the client chose to keep the rule. So the prices are back to
+what each language's own page prints, and §1 and §2 are open again.
+
+This is recorded rather than deleted so the same ground is not covered twice. If
+it is reopened, these are the values that were agreed and then withdrawn:
+
+| Dish or drink          | Printed en | Printed ar | Printed ku | Proposed for all three |
+| ---------------------- | ---------- | ---------- | ---------- | ---------------------- |
+| Fattet Batenjen        | 12,000     | 12,000     | 12,500     | 12,000                 |
+| Kefta                  | 26,000     | 26,000     | 26,500     | 26,000                 |
+| Kibbet Lahmeh bi Laban | 31,000     | 31,000     | 24,000     | 31,000                 |
+| Fassoulya bi Lahmeh    | 39,000     | 34,000     | 39,000     | 34,000                 |
+| Espresso Doppio        | 9,500      | 7,000      | 9,500      | 7,000                  |
+| Cappuccino             | 10,000     | 9,500      | 10,000     | 9,500                  |
+| Café Blanc             | 6,000      | 10,000     | 6,000      | 10,000                 |
+| American Coffee        | 7,000      | 6,000      | 7,000      | 6,000                  |
+
+Two things were worth noting at the time and would be again:
+
+- **Fassoulya bi Lahmeh** was the only food price that moved English and Kurdish
+  _down_, 39,000 to 34,000 — a guest reading either page would have been charged
+  5,000 IQD less than the menu in their hand said.
+- **Café Blanc** was the largest single move of the eight: 6,000 to 10,000 for
+  English and Kurdish readers, a 67% rise that would have turned the cheapest
+  coffee on the menu into the joint dearest.
+
+Mechanically it was four Kurdish and one English price in §1, and four of each
+in §2 — thirteen values across eight dishes, with Arabic never changing, since
+the proposal was to adopt its figures. Kurdish went through a `CLIENT_PRICES`
+map in `scripts/menu-from-pdf.mjs` keyed by position and asserting the printed
+value it replaced; English was edited directly in `src/lib/menu/en.ts`. Both are
+removed. The commit is in the branch history if the detail is ever wanted.
 
 ## 3. Two grills share a name in English only
 
