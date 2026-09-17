@@ -104,6 +104,10 @@ npm run photos              # rebuild public/dishes and src/lib/menu/photos.ts
 npm run photos -- --report  # ... and print every white-balance measurement
 ```
 
+It reads the menus straight out of the TypeScript they live in, so it needs the
+Node 22 that `.nvmrc` pins rather than the 20.9 floor in `package.json`. CI never
+runs it; the output it writes is committed.
+
 **White balance is a build step, not a flourish.** The dishes are shot top-down
 on a pale seamless, but the seamless is a different white in nearly every frame
 — the cast across the set runs from R−B = −28 (cool blue) to +48 (pink), and

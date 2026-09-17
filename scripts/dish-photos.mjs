@@ -5,6 +5,9 @@
  *   npm run photos          # rebuild public/dishes and src/lib/menu/photos.ts
  *   npm run photos -- --report   # ... and print the white-balance measurements
  *
+ * It reads the menus straight out of the TypeScript they live in, so it runs
+ * under the Node 22 the .nvmrc pins, not the 20.9 the package floor allows.
+ *
  * Input   photos/dishes/*.jpg          the photographs as delivered
  *         photos/dishes/index.json     dish name -> file, from the photo shoot
  * Output  public/dishes/<slug>-<w>.webp
