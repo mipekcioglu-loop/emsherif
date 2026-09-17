@@ -3,6 +3,12 @@ import type { LanguageMenu } from "./types";
 /**
  * English menu, transcribed from the Em Sherif Café Erbil printed menu.
  * Prices are in Iraqi dinar.
+ *
+ * Five prices here are deliberately not the printed ones, by the client's
+ * decisions on disagreements between the printed menus: Fassoulya bi Lahmeh
+ * (§1) and four Hot Beverages re-paired to the Arabic page (§2), each commented
+ * where it sits. See docs/menu-discrepancies.md. Every name, description and
+ * other price is the page, character for character.
  */
 export const englishMenu: LanguageMenu = {
   food: {
@@ -448,7 +454,12 @@ export const englishMenu: LanguageMenu = {
             name: "Fassoulya bi Lahmeh",
             description:
               "Lamb shank with beans in tomato sauce stew, served with white rice",
-            price: 39000,
+            // The printed English page says 39,000 and the Arabic says 34,000.
+            // The client chose the Arabic figure for all three languages, so
+            // this is deliberately not what the English menu prints — see
+            // docs/menu-discrepancies.md §1. The Kurdish equivalent is set by
+            // CLIENT_PRICES in scripts/menu-from-pdf.mjs.
+            price: 34000,
           },
           {
             name: "Beefsteak w Batata",
@@ -508,13 +519,22 @@ export const englishMenu: LanguageMenu = {
       },
       {
         title: "Hot Beverages",
+        // Four prices here are re-paired to the Arabic page by the client's
+        // decision, so they are deliberately not what the English menu prints
+        // — see docs/menu-discrepancies.md §2. All three menus print the same
+        // nine prices but list the drinks against them in a different order,
+        // and the Arabic order is the one a guest is charged by. The printed
+        // English figure is given against each. Flat White is untouched: the
+        // Arabic row is a decaf espresso, a different drink rather than a
+        // different price. Kurdish is set by CLIENT_PRICES in
+        // scripts/menu-from-pdf.mjs.
         items: [
           { name: "Espresso", price: 7000 },
-          { name: "Espresso Doppio", price: 9500 },
-          { name: "Cappuccino", price: 10000 },
+          { name: "Espresso Doppio", price: 7000 }, // printed 9,500
+          { name: "Cappuccino", price: 9500 }, // printed 10,000
           { name: "Café Latte", price: 10000 },
-          { name: "Café Blanc", price: 6000 },
-          { name: "American Coffee", price: 7000 },
+          { name: "Café Blanc", price: 10000 }, // printed 6,000 — a 67% rise
+          { name: "American Coffee", price: 6000 }, // printed 7,000
           { name: "Flat White", price: 10000 },
           { name: "Kahweh Loubnaniyeh", price: 7000 },
           {

@@ -123,10 +123,19 @@ const SECTION_ORDER = {
 };
 
 /**
- * The Arabic hot-drinks list is printed against the wrong prices: from the
- * second row down the names are offset by one and Flat White is replaced by a
- * decaf espresso (docs/menu-discrepancies.md §2). Prices still line up with
- * English, so only the photographs need re-pointing — by name, not by row.
+ * The Arabic page lists its hot drinks in a different order from the other two,
+ * and carries a decaf espresso where they carry Flat White
+ * (docs/menu-discrepancies.md §2). So the fourth Arabic row is not the fourth
+ * English drink, and matching photographs by row would put the doppio's cup on
+ * the cappuccino. Mapped by name instead.
+ *
+ * The prices no longer come into it. They used to: the three menus printed the
+ * same price column against differently-ordered drinks, so each drink cost
+ * something different depending on the language read. The client has since
+ * settled that by taking the Arabic pairing, so every drink now costs the same
+ * everywhere — but the drinks are still listed in a different order, which is
+ * what this table is for, and that has not changed.
+ *
  * Arabic row -> English row; null where Arabic lists a drink English does not.
  */
 const ITEM_OVERRIDES = {

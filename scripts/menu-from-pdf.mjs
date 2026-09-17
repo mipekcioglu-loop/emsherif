@@ -172,6 +172,7 @@ function kurdishLetters(s) {
 const ligaturesUsed = new Set();
 /** Café corrections applied, reported at the end of a run. */
 const cafeApplied = [];
+const pricesApplied = [];
 
 const fix = (s, lang) => {
   if (!s) return s;
@@ -478,6 +479,87 @@ const CAFE_NAMES = {
   },
 };
 
+/**
+ * Prices the client has decided, where the three printed menus disagreed.
+ *
+ * This is a deliberate departure from the rule that the site reproduces each
+ * printed menu exactly. Four dishes were priced differently between languages
+ * (docs/menu-discrepancies.md §1); the combined source document carries the
+ * same disagreements, so no document could settle them and the client chose:
+ * **the Arabic figure is the one a guest is charged, in every language.**
+ *
+ * Three of the four correct Kurdish alone. The fourth, Fassoulya bi Lahmeh,
+ * moves English and Kurdish *down* from 39,000 to Arabic's 34,000 — a guest
+ * reading those two pays 5,000 less than the page in their hand says. That is
+ * the decision, taken knowingly, and it is why each entry below records where
+ * the value came from.
+ *
+ * Same shape and the same guard as CAFE_NAMES: keyed by position, stating the
+ * price it expects to replace, so a re-parse that lands differently stops the
+ * run instead of quietly repricing the wrong dish. `en.ts` is hand-written, so
+ * its one change (Fassoulya) is edited there directly rather than here.
+ */
+const PRICE_DECISIONS = [
+  { dish: "FATTET BATENJEN", en: 12000, ar: 12000, ku: 12500, decided: 12000 },
+  { dish: "KEFTA", en: 26000, ar: 26000, ku: 26500, decided: 26000 },
+  { dish: "KIBBET LAHMEH BI LABAN", en: 31000, ar: 31000, ku: 24000, decided: 31000 },
+  { dish: "FASSOULYA BI LAHMEH", en: 39000, ar: 34000, ku: 39000, decided: 34000 },
+];
+export { PRICE_DECISIONS };
+
+const CLIENT_PRICES = {
+  ku: {
+    // Fattet Batenjen. en 12,000 · ar 12,000 · ku 12,500 -> Arabic.
+    "food:2:1": { was: 12500, now: 12000 },
+    // Kefta. en 26,000 · ar 26,000 · ku 26,500 -> Arabic.
+    "food:8:5": { was: 26500, now: 26000 },
+    // Kibbet Lahmeh bi Laban. en 31,000 · ar 31,000 · ku 24,000 -> Arabic.
+    "food:9:0": { was: 24000, now: 31000 },
+    // Fassoulya bi Lahmeh. en 39,000 · ar 34,000 · ku 39,000 -> Arabic.
+    "food:9:1": { was: 39000, now: 34000 },
+
+    // Hot drinks, re-paired to the Arabic page (docs/menu-discrepancies.md §2).
+    // All three menus print the same nine prices; the Arabic page lists its
+    // drinks against them in a different order, so each drink's price differs
+    // between languages. The client chose the Arabic pairing, so four drinks
+    // are repriced here and in en.ts. Arabic itself does not move.
+    //
+    // Espresso Doppio, from the row Arabic gives it.
+    "drinks:4:1": { was: 9500, now: 7000 },
+    // Cappuccino.
+    "drinks:4:2": { was: 10000, now: 9500 },
+    // Café Blanc. The largest move in the whole exercise: a 67% rise.
+    "drinks:4:4": { was: 6000, now: 10000 },
+    // American Coffee.
+    "drinks:4:5": { was: 7000, now: 6000 },
+    //
+    // Espresso, Café Latte, Kahweh Loubnaniyeh and Tea already match. Flat
+    // White is left alone at 10,000: the Arabic page has a decaf espresso on
+    // that row, which is a different drink rather than a different price, and
+    // the decision was about pairing, not about changing the drinks list.
+  },
+};
+
+/** Applies those prices to a built menu, in place. */
+function applyClientPrices(lang, menu, report) {
+  for (const [at, { was, now }] of Object.entries(CLIENT_PRICES[lang] ?? {})) {
+    const [category, s, i] = at.split(":");
+    const item = menu[category]?.sections[Number(s)]?.items[Number(i)];
+    if (!item) {
+      throw new Error(`Client price ${lang} ${at}: there is no dish at that position.`);
+    }
+    if (item.price !== was) {
+      throw new Error(
+        `Client price ${lang} ${at} (${item.name}): expected the printed menu to ` +
+          `say ${was} but it now parses as ${item.price}. Check the position, and ` +
+          `check with the client, before letting this through.`,
+      );
+    }
+    item.price = now;
+    report.push(`${lang} ${at} ${item.name}: ${was} -> ${now}`);
+  }
+}
+
 /** Applies those corrections to a built menu, in place. */
 function applyCafeNames(lang, menu, report) {
   for (const [at, { was, now }] of Object.entries(CAFE_NAMES[lang] ?? {})) {
@@ -499,7 +581,7 @@ function applyCafeNames(lang, menu, report) {
   }
 }
 
-export async function buildLanguage(lang) {
+export async function buildLanguage(lang, { printedPrices = false } = {}) {
   const pages = await parseMenu(`public/menus/${lang}-menu.pdf`, LTR_FILES.has(lang));
   const byPage = new Map(pages.map((p) => [p.page, p]));
   const plan = PLAN[lang];
@@ -527,6 +609,9 @@ export async function buildLanguage(lang) {
     out[category] = { sections };
   }
   applyCafeNames(lang, out, cafeApplied);
+  // `printedPrices` leaves the client's decisions off, so a caller can still
+  // see what the page actually prints — which is what the price audit compares.
+  if (!printedPrices) applyClientPrices(lang, out, pricesApplied);
   return out;
 }
 
@@ -574,6 +659,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (cafeApplied.length) {
     console.log(`\n${cafeApplied.length} café name corrections applied:`);
     for (const line of cafeApplied) console.log(`  ${line}`);
+  }
+  // These make the site differ from the printed page on purpose, so they are
+  // the last thing anyone should be left guessing about.
+  if (pricesApplied.length) {
+    console.log(
+      `\n${pricesApplied.length} client price decisions applied ` +
+        `(docs/menu-discrepancies.md §1 — the Arabic figure wins):`,
+    );
+    for (const line of pricesApplied) console.log(`  ${line}`);
   }
 
   // A ligature entry that never fires is either stale or misspelled, and

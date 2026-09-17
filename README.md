@@ -74,7 +74,7 @@ photos/dishes/             the photographs as delivered, plus index.json
 scripts/
   dish-photos.mjs          white-balances and crops the photographs
   menu-from-pdf.mjs        regenerates ar.ts and ku.ts from the printed PDFs
-  audit-prices.mjs         compares the three menus against each other
+  audit-prices.mjs         compares the three menus, and what the site quotes
   make-logo.mjs            regenerates the wordmark assets
 docs/
   menu-discrepancies.md    where the printed menus disagree
@@ -235,13 +235,21 @@ recognised from the page rather than from a list of known-bad words, it is:
 
 ### Checking the menu
 
-`scripts/audit-prices.mjs` compares the three printed menus against each other
-and reports every disagreement. It currently finds four dishes priced
-differently between languages, and the Arabic hot-drinks list is shifted
-against its prices. These are faults **in the printed menus**, so the site
-reproduces each language exactly as printed and the conflicts are written up in
-[docs/menu-discrepancies.md](docs/menu-discrepancies.md) for the café to
-resolve.
+`scripts/audit-prices.mjs` answers two questions. First, do the printed menus
+agree with each other? They do not, in eight places — four dishes priced
+differently between languages, and four drinks, because the Arabic hot-drinks
+list is shifted against its prices. Those are faults **in the printed menus**;
+the client has now ruled on all eight, so the script reports them as settled,
+with the decision, rather than as errors to fix. Second, does the site quote one
+price per dish whichever language a guest reads? It must, and the script fails
+if it does not.
+
+**Eight prices are therefore deliberately not the printed ones**, which is the
+single exception to the rule that menu content matches the printed menus
+exactly. Kurdish sits in `CLIENT_PRICES` in `scripts/menu-from-pdf.mjs`, keyed
+by position and asserting the value it replaces; English is commented in
+`src/lib/menu/en.ts`. The reasoning, and what each page actually prints, is in
+[docs/menu-discrepancies.md](docs/menu-discrepancies.md) §1 and §2.
 
 ### Right-to-left is a layout, not a mirror
 
