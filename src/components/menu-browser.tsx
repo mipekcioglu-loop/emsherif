@@ -163,7 +163,7 @@ export function MenuBrowser({
                 <Link
                   key={other.category}
                   href={`/${language}/${other.category}`}
-                  className="eyebrow text-ink/62 hover:bg-ink/5 hover:text-ink block px-4 py-3 tracking-[0.16em] transition-colors"
+                  className="eyebrow text-ink/72 hover:bg-ink/5 hover:text-ink block px-4 py-3 tracking-[0.16em] transition-colors"
                 >
                   {other.label}
                 </Link>
@@ -206,7 +206,7 @@ export function MenuBrowser({
         </p>
 
         {searching && total === 0 ? (
-          <p className="body-rtl text-ink/62 py-16 text-center text-sm">
+          <p className="body-rtl text-ink/72 py-16 text-center text-sm">
             {strings.noResults}
           </p>
         ) : null}
@@ -296,7 +296,7 @@ function Chip({
       className={`chip-label shrink-0 rounded-full border px-[15px] pt-1.5 pb-[7px] whitespace-nowrap transition-colors ${
         active
           ? "bg-ink border-ink text-paper font-semibold"
-          : "border-ink/15 text-ink/62 hover:border-ink/28 hover:text-ink"
+          : "border-ink/15 text-ink/72 hover:border-ink/28 hover:text-ink"
       }`}
     >
       {children}

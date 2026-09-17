@@ -78,7 +78,7 @@ export function SiteHeader({
               className={`tab-label relative px-4 py-3.5 transition-colors sm:px-6.5 ${
                 isCurrent
                   ? "text-paper after:bg-paper after:absolute after:inset-x-4 after:-bottom-px after:h-0.5 after:content-[''] sm:after:inset-x-6.5"
-                  : "text-paper/45 hover:text-paper/80"
+                  : "text-paper/60 hover:text-paper/80"
               }`}
             >
               {dictionary.categoryLabels[item]}

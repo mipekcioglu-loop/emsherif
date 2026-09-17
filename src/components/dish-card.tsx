@@ -67,13 +67,13 @@ export function DishCard({
 
       <div className="flex flex-1 flex-col px-4.5 pt-4 pb-3.5">
         {showSection ? (
-          <p className="eyebrow text-ink/28 mb-1.5">{dish.section}</p>
+          <p className="eyebrow text-ink/72 mb-1.5">{dish.section}</p>
         ) : null}
 
         <h3 className={`dish-name ${dish.description ? "" : "mb-4"}`}>{dish.name}</h3>
 
         {dish.description ? (
-          <p className="dish-description text-ink/62 mt-2 mb-4.5 max-w-[34ch]">
+          <p className="dish-description text-ink/72 mt-2 mb-4.5 max-w-[34ch]">
             {dish.description}
           </p>
         ) : null}
@@ -82,7 +82,7 @@ export function DishCard({
             direction in Arabic and Kurdish, never by a bidi override. */}
         <p className="border-ink/8 mt-auto flex items-baseline justify-start gap-[5px] border-t pt-3.5 leading-[normal]">
           <span className="price-amount">{formatPrice(dish.price)}</span>
-          <span className="price-currency text-ink/45">{currency}</span>
+          <span className="price-currency text-ink/72">{currency}</span>
         </p>
       </div>
     </article>

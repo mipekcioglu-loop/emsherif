@@ -24,7 +24,7 @@ export function VenueInfo({ language, id }: { language: Language; id?: string })
         <h2 className="font-display text-paper/70 rtl:font-naskh text-[17px] font-medium sm:text-[19px]">
           {dictionary.venueHeading}
         </h2>
-        <span className="eyebrow border-paper/22 text-paper/45 rounded-[3px] border border-dashed px-1.5 py-[3px] text-[8.5px] tracking-[0.16em] whitespace-nowrap">
+        <span className="eyebrow border-paper/22 text-paper/60 rounded-[3px] border border-dashed px-1.5 py-[3px] text-[8.5px] tracking-[0.16em] whitespace-nowrap">
           {dictionary.venuePending}
         </span>
       </div>
@@ -32,10 +32,10 @@ export function VenueInfo({ language, id }: { language: Language; id?: string })
       <dl className="grid grid-cols-2 gap-x-3.5 gap-y-4 text-start sm:grid-cols-4 sm:gap-x-6 sm:gap-y-0">
         {venueFields.map((field) => (
           <div key={field} className="flex flex-col">
-            <dt className="eyebrow text-paper/45 mb-1.5 text-[9.5px] tracking-[0.16em]">
+            <dt className="eyebrow text-paper/60 mb-1.5 text-[9.5px] tracking-[0.16em]">
               {dictionary.venueLabels[field]}
             </dt>
-            <dd className="border-paper/22 text-paper/45 body-rtl flex-1 rounded-[3px] border border-dashed px-2.5 py-2.5 text-[11px] leading-[1.55] italic rtl:not-italic">
+            <dd className="border-paper/22 text-paper/60 body-rtl flex-1 rounded-[3px] border border-dashed px-2.5 py-2.5 text-[11px] leading-[1.55] italic rtl:not-italic">
               {dictionary.venuePlaceholders[field]}
             </dd>
           </div>

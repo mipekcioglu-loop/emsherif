@@ -37,9 +37,9 @@ export function VenueSheet({
           event.preventDefault();
           dialog.showModal();
         }}
-        className="eyebrow text-ink/62 hover:text-ink border-ink/15 hover:border-ink/28 mt-3.5 inline-flex w-fit items-center gap-[7px] border-b pb-[5px] transition-colors"
+        className="eyebrow text-ink/72 hover:text-ink border-ink/15 hover:border-ink/28 mt-3.5 inline-flex w-fit items-center gap-[7px] border-b pb-[5px] transition-colors"
       >
-        <span aria-hidden="true" className="text-[12.5px] tracking-normal opacity-55">
+        <span aria-hidden="true" className="text-[12.5px] tracking-normal opacity-75">
           &#9432;
         </span>
         {label}
@@ -56,7 +56,7 @@ export function VenueSheet({
         <form method="dialog" className="flex justify-end">
           <button
             type="submit"
-            className="eyebrow text-paper/45 hover:text-paper -me-2 px-2 py-2 transition-colors"
+            className="eyebrow text-paper/60 hover:text-paper -me-2 px-2 py-2 transition-colors"
           >
             {closeLabel}
           </button>

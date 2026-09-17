@@ -3,8 +3,25 @@
 /*
  * Brand tokens, taken from the printed Em Sherif Café menu: deep navy on a
  * warm ivory paper stock. Everything else on the page is an opacity of the
- * navy — one ink, a few weights of presence — so `text-ink/62`, `border-ink/15`
+ * navy — one ink, a few weights of presence — so `text-ink/72`, `border-ink/15`
  * and friends are the whole palette. Never a raw hex in a component.
+ *
+ * Those opacities are not free choices where they carry text. Measured in
+ * Chromium against these two tokens:
+ *
+ *   text-ink/72   on paper   4.85:1   the floor for running text and fine
+ *                                     print — descriptions, the currency,
+ *                                     chips, eyebrows, the allergy line
+ *   text-ink/78   on paper   5.70:1   a step above it, for a label on its body
+ *   text-ink/88   on paper   7.60:1   the opening passage
+ *   text-paper/60 on navy    4.95:1   the floor for text in the navy chrome
+ *   text-paper/70 on navy    6.13:1   footer links, the venue heading
+ *
+ * 4.5:1 is the bar for all of it: none of this text reaches the 24px, or
+ * 18.66px bold, that would let it down to 3:1 — and it is smaller still in
+ * Arabic and Kurdish. Anything below the floor must be genuinely decorative;
+ * `text-ink/28` on the section tally is the one such case left. The full
+ * audit, and how to re-measure it, is in docs/contrast.md.
  */
 @theme {
   --color-ink: #183f67;
@@ -199,9 +216,11 @@
 
   /*
    * The price lockup: amount then currency, adjacent, in all three languages.
-   * It is tone that makes the currency secondary, not distance — so the
-   * tracking is cut to .04em and it sits right after the number. RTL reverses
-   * it by direction alone, never by a bidi override.
+   * Size and tracking are what make the currency secondary — it is 5px smaller
+   * and cut to .04em, sitting right after the number. Tone used to do that job
+   * as well, but the currency has to carry 4.5:1 like any other fine print, so
+   * it is only a shade lighter than the amount now. RTL reverses the lockup by
+   * direction alone, never by a bidi override.
    */
   .price-amount {
     font-size: 15.5px;

@@ -80,6 +80,7 @@ docs/
   menu-discrepancies.md    where the printed menus disagree
   provisional-strings.md   Arabic and Kurdish awaiting a native speaker
   pending-content.md       what the café still owes the site
+  contrast.md              every text colour, measured in a browser
 ```
 
 ## The page
@@ -222,6 +223,13 @@ Taken from the printed menu: navy `#183f67` on ivory `#fffff5`, Cormorant
 Garamond for display and Inter for body text. The colours are declared once in
 `src/app/globals.css` under `@theme` and used as `text-ink` / `bg-paper`, so a
 change lands in one place.
+
+Everything else on the page is an opacity of the navy, and where those
+opacities carry text they are not free choices: `text-ink/72` on the paper and
+`text-paper/60` on the navy are the floor, measured at 4.85:1 and 4.95:1 in
+Chromium against a 4.5:1 bar. The whole audit — all three languages, both
+widths, and the two things deliberately left below the line — is in
+[docs/contrast.md](docs/contrast.md). Read it before lightening any text.
 
 Type is Cormorant Garamond for dish names, section headings, the filter pills
 and the footer links, at 500–600 only; Inter for descriptions, prices, tabs and

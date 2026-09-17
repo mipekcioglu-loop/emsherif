@@ -33,7 +33,7 @@ export function SearchField({
   return (
     <div
       role="search"
-      className="border-ink/15 text-ink/45 flex w-full items-center gap-2.5 rounded-full border bg-[color-mix(in_srgb,var(--color-ink)_2%,transparent)] px-4 py-2.5 sm:w-[290px]"
+      className="border-ink/15 text-ink/62 flex w-full items-center gap-2.5 rounded-full border bg-[color-mix(in_srgb,var(--color-ink)_2%,transparent)] px-4 py-2.5 sm:w-[290px]"
     >
       <svg
         viewBox="0 0 16 16"
@@ -68,7 +68,7 @@ export function SearchField({
         aria-controls={controls}
         enterKeyHint="search"
         autoComplete="off"
-        className="text-ink placeholder:text-ink/45 w-full min-w-0 border-0 bg-transparent p-0 text-[12.5px] outline-none disabled:cursor-not-allowed"
+        className="text-ink placeholder:text-ink/72 w-full min-w-0 border-0 bg-transparent p-0 text-[12.5px] outline-none disabled:cursor-not-allowed"
       />
 
       {query ? (
@@ -76,7 +76,7 @@ export function SearchField({
           type="button"
           onClick={() => setSearchQuery("")}
           aria-label={clearLabel}
-          className="text-ink/45 hover:text-ink -me-1 shrink-0 px-1 text-[15px] leading-none transition-colors"
+          className="text-ink/72 hover:text-ink -me-1 shrink-0 px-1 text-[15px] leading-none transition-colors"
         >
           &times;
         </button>

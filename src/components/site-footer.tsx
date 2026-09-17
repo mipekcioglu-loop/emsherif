@@ -73,7 +73,7 @@ export function SiteFooter({ language }: { language: Language }) {
 
       <div className="bg-paper/14 mt-6.5 mb-4 h-px" />
 
-      <p className="eyebrow text-paper/45">
+      <p className="eyebrow text-paper/60">
         © {new Date().getFullYear()} {dictionary.cafeName} · {dictionary.city}
       </p>
     </footer>
