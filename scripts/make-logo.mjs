@@ -1,17 +1,29 @@
 /**
- * Regenerates public/em-sherif-cafe-logo.png.
+ * Regenerates the two wordmark assets:
+ *
+ *   public/em-sherif-cafe-logo.png   the master, navy line art on transparency
+ *   public/wordmark-mask.png         the copy the site actually loads
  *
  * Cuts the Em Sherif Café wordmark out of the printed menu's cover page and
  * re-renders it as navy line art on a transparent background, so the wordmark
  * sits on any background instead of carrying the cover's paper colour with it.
  *
- * `sharp` is not a project dependency — install it only when rerunning this:
- *   npm i -D sharp && node scripts/make-logo.mjs && npm uninstall sharp
+ * The site never places the wordmark as a picture; it paints it through a CSS
+ * mask, which uses only the alpha channel and is never drawn wider than 210px.
+ * The master is 774px and 53KB, which is 53KB every guest on mobile data pays
+ * for, so a 400px palettised copy is written alongside it — indistinguishable
+ * at 3x on a phone, a third of the bytes. Keep the two in step by running this
+ * script rather than replacing either by hand.
+ *
+ *   npm run logo
  */
 import sharp from "sharp";
 
 const SRC = "public/menu-pages/en/page-01.webp";
 const OUT = "public/em-sherif-cafe-logo.png";
+const MASK_OUT = "public/wordmark-mask.png";
+/** Wider than the wordmark is ever drawn (210px), allowing for a 2x screen. */
+const MASK_WIDTH = 400;
 const INK = [0x18, 0x3f, 0x67];
 const BBOX = { left: 476, top: 773, width: 238, height: 137 };
 const PAD = 10;
@@ -55,5 +67,14 @@ const NOISE_FLOOR = 6;
   await sharp(out, { raw: { width: info.width, height: info.height, channels: 4 } })
     .png({ compressionLevel: 9, palette: true, colours: 64 })
     .toFile(OUT);
-  console.log(`wrote ${info.width}x${info.height}`);
+
+  const mask = await sharp(OUT)
+    .resize(MASK_WIDTH)
+    .png({ compressionLevel: 9, palette: true, colours: 32, effort: 10 })
+    .toFile(MASK_OUT);
+
+  console.log(`wrote ${OUT} at ${info.width}x${info.height}`);
+  console.log(
+    `wrote ${MASK_OUT} at ${mask.width}x${mask.height}, ${(mask.size / 1024).toFixed(1)} KB`,
+  );
 })();

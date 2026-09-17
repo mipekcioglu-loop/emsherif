@@ -1,0 +1,398 @@
+{
+  "Vita C": {
+    "photo": "vita-c.jpg",
+    "verdict": "confirmed"
+  },
+  "Aqua Panna — Small": {
+    "photo": "aqua-panna-small.jpg",
+    "verdict": "confirmed"
+  },
+  "Tea Selection": {
+    "photo": "tea-selection.jpg",
+    "verdict": "confirmed"
+  },
+  "American Coffee": {
+    "photo": "american-coffee.jpg",
+    "verdict": "confirmed"
+  },
+  "Flat White": {
+    "photo": "flat-white.jpg",
+    "verdict": "uncertain"
+  },
+  "Hummus with Pine Nuts": {
+    "photo": "hummus-with-pine-nuts.jpg",
+    "verdict": "confirmed"
+  },
+  "Shawarma Lahmeh": {
+    "photo": "shawarma-lahmeh.jpg",
+    "verdict": "confirmed"
+  },
+  "Batata Mekliyeh": {
+    "photo": "batata-mekliyeh.jpg",
+    "verdict": "confirmed"
+  },
+  "Beefsteak w Batata": {
+    "photo": "beefsteak-w-batata.jpg",
+    "verdict": "confirmed"
+  },
+  "Riyash": {
+    "photo": "riyash.jpg",
+    "verdict": "confirmed"
+  },
+  "Shawarma Djej": {
+    "photo": "shawarma-djej.jpg",
+    "verdict": "confirmed"
+  },
+  "Kebab": {
+    "photo": "kebab.jpg",
+    "verdict": "confirmed"
+  },
+  "Kefta": {
+    "photo": "kefta.jpg",
+    "verdict": "confirmed"
+  },
+  "Halloum": {
+    "photo": "halloum.jpg",
+    "verdict": "confirmed"
+  },
+  "Kraydis Harr": {
+    "photo": "kraydis-harr.jpg",
+    "verdict": "confirmed"
+  },
+  "Tamriyeh": {
+    "photo": "tamriyeh.jpg",
+    "verdict": "confirmed"
+  },
+  "Merry Cream": {
+    "photo": "merry-cream.jpg",
+    "verdict": "confirmed"
+  },
+  "Em Ali": {
+    "photo": "em-ali.jpg",
+    "verdict": "confirmed"
+  },
+  "Mafrouket Festok": {
+    "photo": "mafrouket-festok.jpg",
+    "verdict": "confirmed"
+  },
+  "Lazy Cake": {
+    "photo": "lazy-cake.jpg",
+    "verdict": "confirmed"
+  },
+  "Chocolate w Haleweh": {
+    "photo": "chocolate-w-haleweh.jpg",
+    "verdict": "confirmed"
+  },
+  "Meghli": {
+    "photo": "meghli.jpg",
+    "verdict": "confirmed"
+  },
+  "Strawberry Cake": {
+    "photo": "strawberry-cake.jpg",
+    "verdict": "confirmed"
+  },
+  "Custard": {
+    "photo": "custard.jpg",
+    "verdict": "confirmed"
+  },
+  "Muhallabiyeh Karkadeh": {
+    "photo": "muhallabiyeh-karkadeh.jpg",
+    "verdict": "confirmed"
+  },
+  "Riz bi Halib": {
+    "photo": "riz-bi-halib.jpg",
+    "verdict": "confirmed"
+  },
+  "Aysh el Saraya": {
+    "photo": "aysh-el-saraya.jpg",
+    "verdict": "confirmed"
+  },
+  "Lentil Soup": {
+    "photo": "lentil-soup.jpg",
+    "verdict": "confirmed"
+  },
+  "Fattet Maftoul": {
+    "photo": "fattet-maftoul.jpg",
+    "verdict": "uncertain"
+  },
+  "Arayes Kebab": {
+    "photo": "arayes-kebab.jpg",
+    "verdict": "confirmed"
+  },
+  "Fattet Hummus": {
+    "photo": "fattet-hummus.jpg",
+    "verdict": "confirmed"
+  },
+  "Lahmeh Mechwiyeh": {
+    "photo": "lahmeh-mechwiyeh.jpg",
+    "verdict": "confirmed"
+  },
+  "Kibbeh Nayyeh": {
+    "photo": "kibbeh-nayyeh.jpg",
+    "verdict": "confirmed"
+  },
+  "Frakeh Jnoubiyeh": {
+    "photo": "frakeh-jnoubiyeh.jpg",
+    "verdict": "confirmed"
+  },
+  "Batata Harra": {
+    "photo": "batata-harra.jpg",
+    "verdict": "confirmed"
+  },
+  "Mixed Grill": {
+    "photo": "mixed-grill.jpg",
+    "verdict": "confirmed"
+  },
+  "Taouk Salad": {
+    "photo": "taouk-salad.jpg",
+    "verdict": "confirmed"
+  },
+  "Fattet Batenjen": {
+    "photo": "fattet-batenjen.jpg",
+    "verdict": "confirmed"
+  },
+  "Djej Msahab": {
+    "photo": "djej-msahab.jpg",
+    "verdict": "confirmed"
+  },
+  "Batata Mahrouseh": {
+    "photo": "batata-mahrouseh.jpg",
+    "verdict": "confirmed"
+  },
+  "Lahmeh bi Ajeen Debs": {
+    "photo": "lahmeh-bi-ajeen-debs.jpg",
+    "verdict": "confirmed"
+  },
+  "Mini Lahmeh bi Ajeen | 3 pcs": {
+    "photo": "mini-lahmeh-bi-ajeen-3-pcs.jpg",
+    "verdict": "uncertain"
+  },
+  "Burger Em Sherif": {
+    "photo": "burger-em-sherif.jpg",
+    "verdict": "confirmed"
+  },
+  "Sambousik": {
+    "photo": "sambousik.jpg",
+    "verdict": "confirmed"
+  },
+  "Taouk": {
+    "photo": "taouk.jpg",
+    "verdict": "confirmed"
+  },
+  "Labneh": {
+    "photo": "labneh.jpg",
+    "verdict": "confirmed"
+  },
+  "Bokjat Jebneh": {
+    "photo": "bokjat-jebneh.jpg",
+    "verdict": "confirmed"
+  },
+  "Foul Akhdar bil Zeit": {
+    "photo": "foul-akhdar-bil-zeit.jpg",
+    "verdict": "confirmed"
+  },
+  "Balila": {
+    "photo": "balila.jpg",
+    "verdict": "confirmed"
+  },
+  "Falafel": {
+    "photo": "falafel.jpg",
+    "verdict": "confirmed"
+  },
+  "Asbit Djej": {
+    "photo": "asbit-djej.jpg",
+    "verdict": "confirmed"
+  },
+  "Ardishawkeh": {
+    "photo": "ardishawkeh.jpg",
+    "verdict": "confirmed"
+  },
+  "Raheb": {
+    "photo": "raheb.jpg",
+    "verdict": "confirmed"
+  },
+  "Musakhan": {
+    "photo": "musakhan.jpg",
+    "verdict": "uncertain"
+  },
+  "Shmandar": {
+    "photo": "shmandar.jpg",
+    "verdict": "confirmed"
+  },
+  "Fassoulya bi Lahmeh": {
+    "photo": "fassoulya-bi-lahmeh.jpg",
+    "verdict": "confirmed"
+  },
+  "Warak Enab": {
+    "photo": "warak-enab.jpg",
+    "verdict": "confirmed"
+  },
+  "Sahen Khodra": {
+    "photo": "sahen-khodra.jpg",
+    "verdict": "confirmed"
+  },
+  "Hummus Ras Asfour Harr": {
+    "photo": "hummus-ras-asfour-harr.jpg",
+    "verdict": "confirmed"
+  },
+  "Ras Asfour Debs Remmane": {
+    "photo": "ras-asfour-debs-remmane.jpg",
+    "verdict": "confirmed"
+  },
+  "Soujouk": {
+    "photo": "soujouk.jpg",
+    "verdict": "confirmed"
+  },
+  "Labneh w Foul Akhdar": {
+    "photo": "labneh-w-foul-akhdar.jpg",
+    "verdict": "confirmed"
+  },
+  "Makanek Debs Remmane": {
+    "photo": "makanek-debs-remmane.jpg",
+    "verdict": "confirmed"
+  },
+  "Mousakkaa": {
+    "photo": "mousakkaa.jpg",
+    "verdict": "confirmed"
+  },
+  "Salata Arabiyeh": {
+    "photo": "salata-arabiyeh.jpg",
+    "verdict": "confirmed"
+  },
+  "Fatayer Selek": {
+    "photo": "fatayer-selek.jpg",
+    "verdict": "confirmed"
+  },
+  "Kibbeh Sajiyeh": {
+    "photo": "kibbeh-sajiyeh.jpg",
+    "verdict": "confirmed"
+  },
+  "Berghol Banadoura": {
+    "photo": "berghol-banadoura.jpg",
+    "verdict": "confirmed"
+  },
+  "Adas": {
+    "photo": "adas.jpg",
+    "verdict": "confirmed"
+  },
+  "Mloukhiyeh bil Zeit": {
+    "photo": "mloukhiyeh-bil-zeit.jpg",
+    "verdict": "confirmed"
+  },
+  "Tabbouleh": {
+    "photo": "tabbouleh.jpg",
+    "verdict": "confirmed"
+  },
+  "Man'ousheh Jebneh": {
+    "photo": "man-ousheh-jebneh.jpg",
+    "verdict": "confirmed"
+  },
+  "Bemieh bil Zeit": {
+    "photo": "bemieh-bil-zeit.jpg",
+    "verdict": "confirmed"
+  },
+  "Fattoush": {
+    "photo": "fattoush.jpg",
+    "verdict": "confirmed"
+  },
+  "Hummus": {
+    "photo": "hummus.jpg",
+    "verdict": "confirmed"
+  },
+  "Muhammara": {
+    "photo": "muhammara.jpg",
+    "verdict": "confirmed"
+  },
+  "Mutabbal": {
+    "photo": "mutabbal.jpg",
+    "verdict": "confirmed"
+  },
+  "Red Bull": {
+    "photo": "red-bull.jpg",
+    "verdict": "confirmed"
+  },
+  "Orange": {
+    "photo": "orange.jpg",
+    "verdict": "confirmed"
+  },
+  "Espresso Doppio": {
+    "photo": "espresso-doppio.jpg",
+    "verdict": "confirmed"
+  },
+  "Sparkling Water — Small": {
+    "photo": "sparkling-water-small.jpg",
+    "verdict": "confirmed"
+  },
+  "Seven Up": {
+    "photo": "seven-up.jpg",
+    "verdict": "confirmed"
+  },
+  "Carrot": {
+    "photo": "carrot.jpg",
+    "verdict": "confirmed"
+  },
+  "Beast Mode": {
+    "photo": "beast-mode.jpg",
+    "verdict": "uncertain"
+  },
+  "Lemon with Mint": {
+    "photo": "lemon-with-mint.jpg",
+    "verdict": "confirmed"
+  },
+  "Red Bull Light": {
+    "photo": "red-bull-light.jpg",
+    "verdict": "confirmed"
+  },
+  "Espresso": {
+    "photo": "espresso.jpg",
+    "verdict": "confirmed"
+  },
+  "Passion Fruit Mojito": {
+    "photo": "passion-fruit-mojito.jpg",
+    "verdict": "confirmed"
+  },
+  "Lemonade": {
+    "photo": "lemonade.jpg",
+    "verdict": "confirmed"
+  },
+  "Miranda": {
+    "photo": "miranda.jpg",
+    "verdict": "confirmed"
+  },
+  "Tropical Storm": {
+    "photo": "tropical-storm.jpg",
+    "verdict": "uncertain"
+  },
+  "Sparkling Water — Large": {
+    "photo": "sparkling-water-large.jpg",
+    "verdict": "confirmed"
+  },
+  "Pepsi Diet": {
+    "photo": "pepsi-diet.jpg",
+    "verdict": "corrected"
+  },
+  "Pink 75": {
+    "photo": "pink-75.jpg",
+    "verdict": "uncertain"
+  },
+  "Pepsi Zero": {
+    "photo": "pepsi-zero.jpg",
+    "verdict": "confirmed"
+  },
+  "Cappuccino": {
+    "photo": "cappuccino.jpg",
+    "verdict": "confirmed"
+  },
+  "Café Latte": {
+    "photo": "caf-latte.jpg",
+    "verdict": "confirmed"
+  },
+  "Café Blanc": {
+    "photo": "caf-blanc.jpg",
+    "verdict": "confirmed"
+  },
+  "Rose of Byblos": {
+    "photo": "rose-of-byblos.jpg",
+    "verdict": "confirmed"
+  }
+}
