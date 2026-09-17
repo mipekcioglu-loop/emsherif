@@ -130,7 +130,7 @@ sections differently and one of them (see below) prints its hot drinks against
 the wrong prices. Doing that alignment once at build time keeps it out of the
 app and under review in one file.
 
-**29 of the 128 dishes have no photograph.** Those cards keep the photo well and
+**28 of the 128 dishes have no photograph.** Those cards keep the photo well and
 fill it with the wordmark, debossed at 17% on an ivory-to-navy wash — quiet on
 purpose, so an unphotographed dish never outshouts a photographed one.
 
@@ -247,7 +247,7 @@ how it is used and why there are two files.
   welcome; there is no Kurdish equivalent in the approved menu, so the Kurdish
   hero carries the eyebrow and the utility column without a passage.
 - **Everything in [docs/pending-content.md](docs/pending-content.md)** — the
-  venue details, three of the four footer URLs, 29 unphotographed dishes, and
+  venue details, three of the four footer URLs, 28 unphotographed dishes, and
   two questions about which dish a photograph belongs to.
 - **Favicon and share image** still need the brand versions.
 

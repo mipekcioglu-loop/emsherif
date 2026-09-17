@@ -46,8 +46,14 @@ export function MenuHero({ language }: { language: Language }) {
           <VenueInfo language={language} />
         </VenueSheet>
 
-        <p className="text-ink/45 body-rtl mt-4 max-w-[290px] text-start text-[10.5px] leading-[1.66]">
-          <b className="text-ink/62 font-semibold">{dictionary.allergyLabel}</b>{" "}
+        {/* The allergy statement is the one piece of fine print a guest may
+            need to read rather than notice, so it carries enough ink to be
+            legible at 10.5px: 70% clears 4.5:1 on the paper (4.54:1), 45% did
+            not (2.42:1). Size and measure keep it subordinate to the passage
+            above, which is 88% ink at 20px. The label stays a step ahead of
+            the body it introduces. */}
+        <p className="text-ink/70 body-rtl mt-4 max-w-[290px] text-start text-[10.5px] leading-[1.66]">
+          <b className="text-ink/78 font-semibold">{dictionary.allergyLabel}</b>{" "}
           {dictionary.allergyBody}
         </p>
       </div>

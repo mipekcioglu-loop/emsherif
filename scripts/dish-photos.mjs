@@ -103,16 +103,17 @@ const ITEM_OVERRIDES = {
  * the shoot delivered one photograph for each name. The photographs settle it:
  * the shawarma and msahab frames are wraps on a plate, so they belong to the
  * sandwich; the fries are served plain, which is the mezze. `Lahmeh Mechwiyeh`
- * is beef and lamb skewers under one name in English and the frame does not
- * say which, so it goes to the first of the two, as printed.
- * Value is the 0-based occurrence, in English menu order, that keeps the photo.
+ * is the beef and the lamb skewers under one name in English, and the café has
+ * since confirmed the one frame stands for both, so it goes to both rows.
+ * Value is the 0-based occurrence, in English menu order, that keeps the photo,
+ * or a list of them where one photograph serves more than one printing.
  */
 const DUPLICATE_NAMES = {
   "Shawarma Lahmeh": 1, // Sandwiches, not the Hot Mezze plate
   "Shawarma Djej": 1, // Sandwiches
   "Djej Msahab": 0, // Sandwiches, not the Masheweh plate
   "Batata Mekliyeh": 0, // Hot Mezze — the frame has no coleslaw
-  "Lahmeh Mechwiyeh": 0, // Masheweh, first of the two
+  "Lahmeh Mechwiyeh": [0, 1], // Masheweh, beef and lamb — one frame for both
 };
 
 const key = (category, section, item) => `${category}:${section}:${item}`;
@@ -141,14 +142,14 @@ function buildMapping(index, report) {
     if (!entry) continue;
     const printedTwice = counts.get(slot.name) > 1;
     if (printedTwice) {
-      const keeper = DUPLICATE_NAMES[slot.name];
-      if (keeper === undefined) {
+      const keepers = DUPLICATE_NAMES[slot.name];
+      if (keepers === undefined) {
         throw new Error(
           `"${slot.name}" is printed ${counts.get(slot.name)} times and has one ` +
             `photograph. Add it to DUPLICATE_NAMES to say which one it belongs to.`,
         );
       }
-      if (slot.occurrence !== keeper) continue;
+      if (![keepers].flat().includes(slot.occurrence)) continue;
     }
     photoOf.set(slotKey, path.basename(entry.photo, path.extname(entry.photo)));
     if (entry.verdict && entry.verdict !== "confirmed") {

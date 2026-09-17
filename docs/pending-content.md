@@ -31,9 +31,10 @@ See [provisional-strings.md](./provisional-strings.md). The menu itself — ever
 dish name, description and price — is not affected: that comes from the printed
 menus and is unchanged.
 
-## 4. Photographs for 29 dishes
+## 4. Photographs for 28 dishes
 
-99 of the 128 dishes have a photograph. The other 29 show the debossed wordmark
+100 of the 128 dishes carry a photograph, out of 99 frames — the Lahmeh
+Mechwiyeh frame serves both of its rows. The other 28 show the debossed wordmark
 card, which is a designed state rather than a gap, so this is not urgent — but
 the list is worth having when the café next books a shoot:
 
@@ -43,22 +44,24 @@ Hummus Soujouk · Hummus Shawarma · Foul · Kibbet Lahmeh bi Laban · Bahamas �
 Mineral Water — Large · Mineral Water — Small · Seven Up Diet · Pepsi ·
 Non-Alcoholic Beer · Mouassal · Ice Tea Peach · Ice Tea Lemon ·
 Kahweh Loubnaniyeh · plus the second printing of Shawarma Lahmeh, Shawarma Djej,
-Djej Msahab, Batata Mekliyeh and Lahmeh Mechwiyeh (see below).
+Djej Msahab and Batata Mekliyeh (see below).
 
-## 5. Two photography questions for the café
+## 5. One photography question for the café
 
-Both are decisions the build had to make to place the 99 photographs, and both
-are one line in `DUPLICATE_NAMES` in
-[`scripts/dish-photos.mjs`](../scripts/dish-photos.mjs) if the café disagrees.
+A decision the build had to make to place the 99 photographs, and one line in
+`DUPLICATE_NAMES` in [`scripts/dish-photos.mjs`](../scripts/dish-photos.mjs) if
+the café disagrees.
 
 - **Five dish names are printed twice, in two sections, with one photograph
   between them.** The photographs settle four of them: the shawarma and msahab
   frames are wraps on a plate, so they went to the sandwich rather than the
   mezze plate; the fries are served plain with ketchup and no coleslaw, so they
   went to the mezze rather than the sandwich.
-- **`Lahmeh Mechwiyeh` is beef at 29,000 and lamb at 36,000**, one name in
-  English, and the frame does not say which it is. It is on the first of the
-  two, as printed. Someone at the café can tell in a second.
+
+**Answered.** `Lahmeh Mechwiyeh` is beef at 29,000 and lamb at 36,000, one name
+in English, and the frame does not say which it is. The café confirmed the one
+frame stands for both, so both rows now carry it — the names, descriptions and
+prices are untouched.
 
 ## 6. Eight photographs the shoot itself was unsure of
 
