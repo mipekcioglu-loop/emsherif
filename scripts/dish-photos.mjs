@@ -155,6 +155,31 @@ const DUPLICATE_NAMES = {
   "Lahmeh Mechwiyeh": [[0, 1]], // one frame, beef and lamb rows both
 };
 
+/**
+ * Photographs we hold but do not place, and why.
+ *
+ * A frame that is in `photos/dishes/` but named by nothing in `index.json`
+ * would otherwise sit there silently, and the next person to run this would
+ * have to work out from scratch whether it was held on purpose or forgotten.
+ * So every source file must be either placed or listed here with a reason, and
+ * the run prints these every time.
+ *
+ * Put a frame back by deleting its line here and giving it an `index.json`
+ * entry — the file is already in the repository.
+ */
+const HELD = {
+  "bahamas.jpg":
+    "Bahamas — the frame is a layered chocolate and vanilla pudding with " +
+    "chocolate shavings. The menu says caramelized banana, crumble caramel, " +
+    "whipped cream: no banana and no caramel crumble are in it. Held pending " +
+    "the café's confirmation that this is Bahamas.",
+  "kahweh-loubnaniyeh.jpg":
+    "Kahweh Loubnaniyeh — the frame is an espresso: glass cup, glass saucer, " +
+    "thick crema, the same set-up as the espresso and espresso-doppio frames. " +
+    "Lebanese coffee is served in a finjan, unfiltered, with no crema. Held " +
+    "pending the café's confirmation.",
+};
+
 const key = (category, section, item) => `${category}:${section}:${item}`;
 
 function englishSlots() {
@@ -802,6 +827,24 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   const mapping = buildMapping(index, report);
 
+  // A source file that is neither placed nor deliberately held is a frame
+  // somebody dropped in and forgot, so say so rather than ignoring it.
+  const inUse = new Set(mapping.files.values());
+  const stray = fs
+    .readdirSync(SOURCE)
+    .filter((f) => /\.jpe?g$/i.test(f))
+    .filter((f) => !inUse.has(f) && !(f in HELD));
+  if (stray.length) {
+    throw new Error(
+      `photos/dishes holds ${stray.join(", ")}, which no dish claims. Give each ` +
+        `one an index.json entry, or add it to HELD with the reason it is held.`,
+    );
+  }
+  const goneHeld = Object.keys(HELD).filter((f) => !fs.existsSync(path.join(SOURCE, f)));
+  if (goneHeld.length) {
+    throw new Error(`HELD names missing files: ${goneHeld.join(", ")}`);
+  }
+
   fs.rmSync(OUT_IMAGES, { recursive: true, force: true });
   fs.mkdirSync(OUT_IMAGES, { recursive: true });
 
@@ -875,6 +918,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       `\n${report.clipped.length} LOSE PART OF THE DISH at the edge of the window:`,
     );
     for (const line of report.clipped) console.log(`  ${line}`);
+  }
+  const heldFrames = Object.entries(HELD);
+  if (heldFrames.length) {
+    console.log(`\n${heldFrames.length} photographs held, in hand but on no card:`);
+    for (const [file, why] of heldFrames) console.log(`  ${file} — ${why}`);
   }
   if (report.verdicts.length) {
     console.log(

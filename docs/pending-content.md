@@ -31,20 +31,21 @@ See [provisional-strings.md](./provisional-strings.md). The menu itself — ever
 dish name, description and price — is not affected: that comes from the printed
 menus and is unchanged.
 
-## 4. Photographs for 17 dishes
+## 4. Photographs for 19 dishes
 
-111 of the 128 dishes carry a photograph, out of 110 frames — the Lahmeh
-Mechwiyeh frame serves both of its rows. The other 17 show the debossed wordmark
+109 of the 128 dishes carry a photograph, out of 108 frames — the Lahmeh
+Mechwiyeh frame serves both of its rows. The other 19 show the debossed wordmark
 card, which is a designed state rather than a gap, so this is not urgent — but
 the list is worth having when the café next books a shoot:
 
 Beyd Ouyoun · Beyd Makhfouk · Beyd Soujouk · Beyd Omelette · Beyd bi Kawarma ·
 Beyd Shakshouka (the café says the six egg dishes are not shot yet) ·
-**Fattet Maftoul** · Sahen Kabis · Hummus Shawarma · Foul ·
+**Fattet Maftoul** · Sahen Kabis · Hummus Shawarma · Foul · **Bahamas** ·
 Mineral Water — Large · Seven Up Diet · Pepsi · Non-Alcoholic Beer · Mouassal ·
-Ice Tea Peach · Ice Tea Lemon.
+Ice Tea Peach · Ice Tea Lemon · **Kahweh Loubnaniyeh**.
 
-Two of those are worth chasing by name:
+Four of those are not waiting on a shoot. **Bahamas** and **Kahweh
+Loubnaniyeh** are held, not missing — see §6. The other two:
 
 - **Fattet Maftoul** was photographed and is now empty, because the frame that
   shipped under that name turned out to be Kibbet Lahmeh bi Laban. The café
@@ -68,29 +69,47 @@ Two of those are worth chasing by name:
 - **Fattet Maftoul's photograph is Kibbet Lahmeh bi Laban**, and **Musakhan and
   Mini Lahmeh bi Ajeen had each other's**. Both corrected.
 
-## 6. Photograph identifications the café has still to confirm
+## 6. Two photographs held, and one identification to confirm
 
-`photos/dishes/index.json` records a verdict per photograph, and
-`npm run photos` prints the list every time it runs. Ten are flagged today —
-four `corrected` (settled, kept for the record) and six `uncertain`. Three of
-the six are live on the site pending an answer and are the ones to ask about:
+### Held — the frames are in hand, on no card
 
-- **Djej Msahab** — one photograph arrived with no section note. It is a plated
-  whole grilled baby chicken, so it is on **Masheweh**; the Sandwiches row keeps
-  the wrap frame. (The Masheweh line says "served with dill and lemon rice" and
-  there is no rice in the frame.)
-- **Bahamas** — the frame is a layered chocolate/vanilla pudding with chocolate
-  shavings. The menu says "caramelized banana, crumble caramel, whipped cream".
-  No banana and no caramel crumble are visible. Is this Bahamas, or has a
-  dessert frame been mislabelled?
-- **Kahweh Loubnaniyeh** — the frame is an espresso: glass cup, glass saucer,
-  thick crema, the same set-up as the `espresso` and `espresso-doppio` frames.
-  Lebanese coffee goes in a finjan, unfiltered, with no crema.
+The client has held both of these. **The photographs are not lost**: they are in
+`photos/dishes/`, out of `index.json`, and listed in `HELD` in
+[`scripts/dish-photos.mjs`](../scripts/dish-photos.mjs) with the reason, which
+`npm run photos` prints on every run. Putting either back is deleting its line
+from `HELD` and giving it an `index.json` entry — no need to ask the café for
+the file again. Meanwhile both dishes show the wordmark card.
 
-The other three uncertain frames — Beast Mode, Pink 75 and Tropical Storm —
-were flagged by the shoot itself and are unchanged from the first delivery.
+- **Bahamas** (`photos/dishes/bahamas.jpg`) — the frame is a layered chocolate
+  and vanilla pudding with thick chocolate shavings, in a glass jar on a steel
+  saucer. The menu says "caramelized banana, crumble caramel, whipped cream":
+  there is no banana and no caramel crumble in it. Either this is not Bahamas,
+  or a dessert frame has been mislabelled. Ask before placing it.
+- **Kahweh Loubnaniyeh** (`photos/dishes/kahweh-loubnaniyeh.jpg`) — the frame is
+  an espresso: glass cup, glass saucer, a thick crema band, the same set-up as
+  the `espresso` and `espresso-doppio` frames already on the site. Lebanese
+  coffee is served in a finjan, unfiltered, with no crema. Ask whether this is
+  the frame they want on قهوة لبنانية.
 
-Two more, not photograph questions but in the same batch:
+The script also refuses to run if a source photograph is neither placed nor
+held, so a frame dropped into `photos/dishes/` and forgotten cannot go unnoticed.
+
+### Live, pending one confirmation
+
+- **Djej Msahab** — the name is printed twice and one photograph arrived with no
+  section note. It is a plated whole grilled baby chicken, so it is on
+  **Masheweh**; the Sandwiches row keeps its wrap frame. (Minor: the Masheweh
+  line says "served with dill and lemon rice" and there is no rice in the
+  frame.) Marked `uncertain` until the café confirms.
+
+### Flagged by the shoot, unchanged
+
+`photos/dishes/index.json` records a verdict per photograph and `npm run photos`
+prints them. Eight are flagged today: four `corrected` (settled, kept for the
+record) and four `uncertain` — Djej Msahab above, plus Beast Mode, Pink 75 and
+Tropical Storm, which came flagged in the first delivery and are unchanged.
+
+### Two more from the same batch, not photograph identifications
 
 - **The can captioned "pepsi"** is a Pepsi Zero Sugar can, which is the frame
   already used for `Pepsi Zero`. Plain `Pepsi` has no photograph. Showing the

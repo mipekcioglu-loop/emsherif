@@ -98,7 +98,10 @@ preloaded, so an English guest never pays for them.
 ### Photography
 
 `photos/dishes/` holds the 110 photographs as the shoot delivered them, and
-`npm run photos` turns them into what the grid serves:
+`npm run photos` turns them into what the grid serves. Two of the 110 are
+**held** — in hand, on no card, because the dish in the frame does not match the
+dish on the menu; `HELD` in the script says which and why, and the run prints
+them. A source photograph that is neither placed nor held stops the run.
 
 ```bash
 npm run photos              # rebuild public/dishes and src/lib/menu/photos.ts
@@ -152,7 +155,7 @@ extended as what it is: each edge's own tone and its own inward slope, averaged
 along the edge and continued outwards with an exponential damping. Tone and
 slope are both continuous across the join, and only background is ever read.
 
-The result is written as WebP at 340px and 540px: 110 photographs, 1.55 MB in
+The result is written as WebP at 340px and 540px: 108 photographs, 1.53 MB in
 total, about 7 KB each. The card well crops further to 3:2 on a phone, so two
 whole cards land in view instead of one and a half — which is why the crop is
 sized against the phone well, the tighter of the two.
@@ -164,7 +167,7 @@ sections differently and one of them (see below) prints its hot drinks against
 the wrong prices. Doing that alignment once at build time keeps it out of the
 app and under review in one file.
 
-**17 of the 128 dishes have no photograph.** Those cards keep the photo well and
+**19 of the 128 dishes have no photograph.** Those cards keep the photo well and
 fill it with the wordmark, debossed at 17% on an ivory-to-navy wash — quiet on
 purpose, so an unphotographed dish never outshouts a photographed one.
 
@@ -314,7 +317,7 @@ how it is used and why there are two files.
   welcome; there is no Kurdish equivalent in the approved menu, so the Kurdish
   hero carries the eyebrow and the utility column without a passage.
 - **Everything in [docs/pending-content.md](docs/pending-content.md)** — the
-  venue details, three of the four footer URLs, 17 unphotographed dishes, and
+  venue details, three of the four footer URLs, 19 unphotographed dishes, and
   the photograph identifications the café has still to confirm.
 - **Favicon and share image** still need the brand versions.
 
