@@ -100,6 +100,8 @@ They also corrected two photographs, which do not touch the menu text: the frame
 shipped as Fattet Maftoul is Kibbet Lahmeh bi Laban, and Musakhan and Mini
 Lahmeh bi Ajeen had each other's. Both are fixed in `photos/dishes/index.json`.
 
-Four further name spellings are still with the café and are **not** applied,
-and two photographs are held off the site because the dish in the frame does not
-match the dish on the menu; `docs/pending-content.md` lists both sets.
+Four further name spellings are still with the café and are **not** applied;
+`docs/pending-content.md` §7 lists them. Two photographs they have confirmed do
+not match the dish on the card — the Bahamas frame against its printed
+description, the Kahweh Loubnaniyeh frame against what Lebanese coffee looks
+like. The café's word settles both; §6 there records why they were queried.

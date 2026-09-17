@@ -31,21 +31,20 @@ See [provisional-strings.md](./provisional-strings.md). The menu itself — ever
 dish name, description and price — is not affected: that comes from the printed
 menus and is unchanged.
 
-## 4. Photographs for 19 dishes
+## 4. Photographs for 17 dishes
 
-109 of the 128 dishes carry a photograph, out of 108 frames — the Lahmeh
-Mechwiyeh frame serves both of its rows. The other 19 show the debossed wordmark
+111 of the 128 dishes carry a photograph, out of 110 frames — the Lahmeh
+Mechwiyeh frame serves both of its rows. The other 17 show the debossed wordmark
 card, which is a designed state rather than a gap, so this is not urgent — but
 the list is worth having when the café next books a shoot:
 
 Beyd Ouyoun · Beyd Makhfouk · Beyd Soujouk · Beyd Omelette · Beyd bi Kawarma ·
 Beyd Shakshouka (the café says the six egg dishes are not shot yet) ·
-**Fattet Maftoul** · Sahen Kabis · Hummus Shawarma · Foul · **Bahamas** ·
+**Fattet Maftoul** · Sahen Kabis · Hummus Shawarma · Foul ·
 Mineral Water — Large · Seven Up Diet · Pepsi · Non-Alcoholic Beer · Mouassal ·
-Ice Tea Peach · Ice Tea Lemon · **Kahweh Loubnaniyeh**.
+Ice Tea Peach · Ice Tea Lemon.
 
-Four of those are not waiting on a shoot. **Bahamas** and **Kahweh
-Loubnaniyeh** are held, not missing — see §6. The other two:
+Two of those are not waiting on a shoot:
 
 - **Fattet Maftoul** was photographed and is now empty, because the frame that
   shipped under that name turned out to be Kibbet Lahmeh bi Laban. The café
@@ -69,30 +68,31 @@ Loubnaniyeh** are held, not missing — see §6. The other two:
 - **Fattet Maftoul's photograph is Kibbet Lahmeh bi Laban**, and **Musakhan and
   Mini Lahmeh bi Ajeen had each other's**. Both corrected.
 
-## 6. Two photographs held, and one identification to confirm
+## 6. Photograph identifications
 
-### Held — the frames are in hand, on no card
+### Closed by the café, against what the frame looks like
 
-The client has held both of these. **The photographs are not lost**: they are in
-`photos/dishes/`, out of `index.json`, and listed in `HELD` in
-[`scripts/dish-photos.mjs`](../scripts/dish-photos.mjs) with the reason, which
-`npm run photos` prints on every run. Putting either back is deleting its line
-from `HELD` and giving it an `index.json` entry — no need to ask the café for
-the file again. Meanwhile both dishes show the wordmark card.
+Two frames were held off the site because the dish in the picture did not match
+the dish on the card. The café has since confirmed both, so both are live. **The
+question is recorded rather than deleted**: what they show has not changed, and
+nobody should reopen it or "fix" the mapping on the strength of looking at the
+picture.
 
-- **Bahamas** (`photos/dishes/bahamas.jpg`) — the frame is a layered chocolate
-  and vanilla pudding with thick chocolate shavings, in a glass jar on a steel
-  saucer. The menu says "caramelized banana, crumble caramel, whipped cream":
-  there is no banana and no caramel crumble in it. Either this is not Bahamas,
-  or a dessert frame has been mislabelled. Ask before placing it.
-- **Kahweh Loubnaniyeh** (`photos/dishes/kahweh-loubnaniyeh.jpg`) — the frame is
-  an espresso: glass cup, glass saucer, a thick crema band, the same set-up as
-  the `espresso` and `espresso-doppio` frames already on the site. Lebanese
-  coffee is served in a finjan, unfiltered, with no crema. Ask whether this is
-  the frame they want on قهوة لبنانية.
+- **Bahamas** — the frame is a layered chocolate and vanilla pudding with thick
+  chocolate shavings, in a glass jar on a steel saucer. The menu says
+  "caramelized banana, crumble caramel, whipped cream": there is no banana and no
+  caramel crumble in it. The café confirms it is Bahamas. If the printed
+  description and the dish disagree, that is theirs to reconcile, not ours.
+  Carried in `index.json` as `confirmed-against-description`.
+- **Kahweh Loubnaniyeh** — the frame is an espresso: glass cup, glass saucer, a
+  thick crema band, the same set-up as the `espresso` and `espresso-doppio`
+  frames. Lebanese coffee is served in a finjan, unfiltered, with no crema. The
+  café confirms it is the frame they want on قهوة لبنانية. Carried as
+  `confirmed-against-appearance`. A guest scrolling Hot Beverages will see four
+  near-identical glass cups; that is the café's call and they have made it.
 
-The script also refuses to run if a source photograph is neither placed nor
-held, so a frame dropped into `photos/dishes/` and forgotten cannot go unnoticed.
+Both verdicts print on every `npm run photos`, which is what keeps the question
+recorded instead of rediscovered.
 
 ### Live, pending one confirmation
 
@@ -105,9 +105,22 @@ held, so a frame dropped into `photos/dishes/` and forgotten cannot go unnoticed
 ### Flagged by the shoot, unchanged
 
 `photos/dishes/index.json` records a verdict per photograph and `npm run photos`
-prints them. Eight are flagged today: four `corrected` (settled, kept for the
-record) and four `uncertain` — Djej Msahab above, plus Beast Mode, Pink 75 and
-Tropical Storm, which came flagged in the first delivery and are unchanged.
+prints every one that is not a plain `confirmed`. Ten are flagged today: four
+`corrected`, two `confirmed-against-…`, and four `uncertain` — Djej Msahab
+above, plus Beast Mode, Pink 75 and Tropical Storm, which came flagged in the
+first delivery and are unchanged.
+
+### Holding a frame back
+
+Nothing is held today, and `HELD` in
+[`scripts/dish-photos.mjs`](../scripts/dish-photos.mjs) is empty — which is the
+normal state, not dead code. To hold a frame, name its file there with the
+reason and take it out of `index.json`; the run prints whatever is held, and
+**refuses to run** if a photograph in `photos/dishes/` is neither placed nor
+held. That is what stops a frame being dropped in and quietly forgotten. The
+file itself never leaves the repository, so putting one back never means asking
+the café to send it again — which is exactly how Bahamas and Kahweh Loubnaniyeh
+came back.
 
 ### Two more from the same batch, not photograph identifications
 

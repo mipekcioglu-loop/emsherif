@@ -422,6 +422,14 @@
     "slug": "kibbet-lahmeh-bi-laban",
     "verdict": "corrected"
   },
+  "Bahamas": {
+    "photo": "bahamas.jpg",
+    "verdict": "confirmed-against-description"
+  },
+  "Kahweh Loubnaniyeh": {
+    "photo": "kahweh-loubnaniyeh.jpg",
+    "verdict": "confirmed-against-appearance"
+  },
   "Man'ousheh Zaatar": {
     "photo": "man-ousheh-zaatar.jpg",
     "verdict": "confirmed"

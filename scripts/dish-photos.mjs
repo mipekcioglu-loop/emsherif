@@ -156,29 +156,24 @@ const DUPLICATE_NAMES = {
 };
 
 /**
- * Photographs we hold but do not place, and why.
+ * Photographs we hold but do not place, and why. Empty is the normal state.
  *
  * A frame that is in `photos/dishes/` but named by nothing in `index.json`
  * would otherwise sit there silently, and the next person to run this would
  * have to work out from scratch whether it was held on purpose or forgotten.
- * So every source file must be either placed or listed here with a reason, and
- * the run prints these every time.
+ * So every source file must be either placed by `index.json` or listed here
+ * with a reason, and the run prints whatever is here.
  *
- * Put a frame back by deleting its line here and giving it an `index.json`
- * entry — the file is already in the repository.
+ * Hold a frame by adding its file name and the reason, and taking it out of
+ * `index.json`. Put it back by doing the reverse — the file itself never
+ * leaves the repository, so nobody has to ask the café for it twice.
+ *
+ * Two frames have been through here: the Bahamas pudding, which does not match
+ * its printed description, and the Kahweh Loubnaniyeh espresso, which is not
+ * how Lebanese coffee is served. The café confirmed both, so both are placed
+ * again and carry a `confirmed-against-…` verdict instead.
  */
-const HELD = {
-  "bahamas.jpg":
-    "Bahamas — the frame is a layered chocolate and vanilla pudding with " +
-    "chocolate shavings. The menu says caramelized banana, crumble caramel, " +
-    "whipped cream: no banana and no caramel crumble are in it. Held pending " +
-    "the café's confirmation that this is Bahamas.",
-  "kahweh-loubnaniyeh.jpg":
-    "Kahweh Loubnaniyeh — the frame is an espresso: glass cup, glass saucer, " +
-    "thick crema, the same set-up as the espresso and espresso-doppio frames. " +
-    "Lebanese coffee is served in a finjan, unfiltered, with no crema. Held " +
-    "pending the café's confirmation.",
-};
+const HELD = {};
 
 const key = (category, section, item) => `${category}:${section}:${item}`;
 
@@ -249,6 +244,21 @@ function buildMapping(index, report) {
     }
     files.set(slug, frame.photo);
     photoOf.set(slotKey, slug);
+    // `verdict` says how sure we are that this frame is this dish:
+    //   confirmed                      — settled, and silent.
+    //   uncertain                      — nobody has confirmed it; it is live
+    //                                    anyway, because a wrong photograph is
+    //                                    better found by the café than by us.
+    //   corrected                      — it was on the wrong dish and has been
+    //                                    moved; kept visible for the record.
+    //   confirmed-against-description  — the café confirms the dish even though
+    //                                    the frame does not match the printed
+    //                                    description.
+    //   confirmed-against-appearance   — the café confirms the dish even though
+    //                                    the frame does not look like it.
+    // The last two are theirs to reconcile, not ours, and stay visible so
+    // nobody reopens a question the café has already closed.
+    // Anything but `confirmed` prints on every run.
     if (frame.verdict && frame.verdict !== "confirmed") {
       report.verdicts.push(`${slot.name} — ${frame.photo} (${frame.verdict})`);
     }
