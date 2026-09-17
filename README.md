@@ -97,7 +97,7 @@ preloaded, so an English guest never pays for them.
 
 ### Photography
 
-`photos/dishes/` holds the 99 photographs as the shoot delivered them, and
+`photos/dishes/` holds the 110 photographs as the shoot delivered them, and
 `npm run photos` turns them into what the grid serves:
 
 ```bash
@@ -115,9 +115,11 @@ on a pale seamless, but the seamless is a different white in nearly every frame
 three of those side by side in one row look careless. The script measures the
 background of each frame and maps it onto one warm neutral, the same warm
 neutral as the empty photo well. A frame whose border is too dark or too busy to
-be a seamless — one salad is shot on a wooden table, with other dishes in
-frame — is left alone rather than wrecked, and the run says which ones those
-were.
+be a seamless is left alone rather than wrecked, and the run says which ones
+those were. Every frame in the set is measurable today — the one that was not, a
+salad shot on a wooden table with other dishes in shot, was replaced by the café
+with a seamless frame of the same dish — but the guard stays, because the next
+delivery may not be.
 
 **The dish, not the frame, is what is cropped to a constant size.** The shoot
 was not framed consistently — some dishes were shot close, some from much
@@ -134,22 +136,23 @@ the paper behind it. Detail does: the seamless is smooth, a dish has edges.
 
 Where a dish was shot too close for the crop to fit around it, the canvas is
 extended rather than the dish being left oversized, capped at 12% of the frame.
-Four frames are not 4:3 at all — two are portrait — and those are left wider
-than the rest rather than have the crop cut into the dish. `npm run photos`
-names every one of these.
+Five frames are left wider than the rest rather than have the crop cut into the
+dish: three are 3:2, one is portrait, and one is 4:3 but has the dish running
+almost to its edges. `npm run photos` names every one of these.
 
 **How the canvas is extended matters more than it sounds.** The seamless is
 vignetted — still falling off in brightness where it runs off the edge of the
 frame — so repeating the edge pixel, or any single colour, puts something flat
 against something graded and the join shows as a line down the picture. That
-happened on 36 of the 99 and had to be found by measurement, not by eye.
+happened on 36 of the 99 frames the set then held, and had to be found by
+measurement, not by eye.
 Reflecting the frame has no such join, but folds the dish back into the margin
 as soon as the extension is deeper than the gap around it. So the background is
 extended as what it is: each edge's own tone and its own inward slope, averaged
 along the edge and continued outwards with an exponential damping. Tone and
 slope are both continuous across the join, and only background is ever read.
 
-The result is written as WebP at 340px and 540px: 99 photographs, 1.36 MB in
+The result is written as WebP at 340px and 540px: 110 photographs, 1.55 MB in
 total, about 7 KB each. The card well crops further to 3:2 on a phone, so two
 whole cards land in view instead of one and a half — which is why the crop is
 sized against the phone well, the tighter of the two.
@@ -161,7 +164,7 @@ sections differently and one of them (see below) prints its hot drinks against
 the wrong prices. Doing that alignment once at build time keeps it out of the
 app and under review in one file.
 
-**28 of the 128 dishes have no photograph.** Those cards keep the photo well and
+**17 of the 128 dishes have no photograph.** Those cards keep the photo well and
 fill it with the wordmark, debossed at 17% on an ivory-to-navy wash — quiet on
 purpose, so an unphotographed dish never outshouts a photographed one.
 
@@ -193,6 +196,13 @@ npm uninstall pdfjs-dist
 Do not edit `src/lib/menu/ar.ts` or `ku.ts` by hand — regenerate them.
 `src/lib/menu/en.ts` is hand-written but was verified against the same text
 layer, item for item.
+
+**The café outranks the PDF.** Where they send a correction to a name, theirs is
+the approved wording and the printed menu is simply out of date. Those live in
+`CAFE_NAMES` in the same script, keyed by position and stating the text each one
+expects to replace, so a correction cannot land on the wrong dish and the run
+stops if the PDF ever parses differently. They are applied after parsing, which
+keeps the generated files generated; `docs/menu-discrepancies.md` §7 lists them.
 
 The PDF fonts have four quirks the script repairs, and where a quirk can be
 recognised from the page rather than from a list of known-bad words, it is:
@@ -304,8 +314,8 @@ how it is used and why there are two files.
   welcome; there is no Kurdish equivalent in the approved menu, so the Kurdish
   hero carries the eyebrow and the utility column without a passage.
 - **Everything in [docs/pending-content.md](docs/pending-content.md)** — the
-  venue details, three of the four footer URLs, 28 unphotographed dishes, and
-  two questions about which dish a photograph belongs to.
+  venue details, three of the four footer URLs, 17 unphotographed dishes, and
+  the photograph identifications the café has still to confirm.
 - **Favicon and share image** still need the brand versions.
 
 ## Deployment

@@ -170,6 +170,8 @@ function kurdishLetters(s) {
 
 /** Entries seen to fire, so a stale one can be reported at the end of a run. */
 const ligaturesUsed = new Set();
+/** Café corrections applied, reported at the end of a run. */
+const cafeApplied = [];
 
 const fix = (s, lang) => {
   if (!s) return s;
@@ -453,6 +455,50 @@ export async function parseMenu(file, ltr = false) {
     .filter((p) => p.items.length);
 }
 
+/**
+ * Corrections the café sent after reviewing the live site.
+ *
+ * The café outranks the printed menu. Where they correct a name, theirs is the
+ * approved wording and the PDF is simply out of date — so this is applied
+ * after parsing rather than the PDF being treated as final.
+ *
+ * Keyed by position, so a correction cannot land on a dish it was not meant
+ * for, and each one states the text it expects to replace. If the PDF ever
+ * parses differently the run stops instead of quietly rewriting the wrong
+ * dish. Only names: nothing here touches a description or a price.
+ */
+const CAFE_NAMES = {
+  ar: {
+    // Kibbet Lahmeh bi Laban. The printed menu drops "bi laban" altogether.
+    "food:9:0": { was: "كبة لحم", now: "كبة لحمة باللبن" },
+  },
+  ku: {
+    // Musakhan.
+    "food:0:5": { was: "مسخەن", now: "مسەخەن" },
+  },
+};
+
+/** Applies those corrections to a built menu, in place. */
+function applyCafeNames(lang, menu, report) {
+  for (const [at, { was, now }] of Object.entries(CAFE_NAMES[lang] ?? {})) {
+    const [category, s, i] = at.split(":");
+    const item = menu[category]?.sections[Number(s)]?.items[Number(i)];
+    if (!item) {
+      throw new Error(
+        `Café correction ${lang} ${at}: there is no dish at that position.`,
+      );
+    }
+    if (item.name !== was) {
+      throw new Error(
+        `Café correction ${lang} ${at}: expected "${was}" but the menu now parses ` +
+          `as "${item.name}". Check the position before letting this through.`,
+      );
+    }
+    item.name = now;
+    report.push(`${lang} ${at}: "${was}" -> "${now}"`);
+  }
+}
+
 export async function buildLanguage(lang) {
   const pages = await parseMenu(`public/menus/${lang}-menu.pdf`, LTR_FILES.has(lang));
   const byPage = new Map(pages.map((p) => [p.page, p]));
@@ -480,6 +526,7 @@ export async function buildLanguage(lang) {
     }
     out[category] = { sections };
   }
+  applyCafeNames(lang, out, cafeApplied);
   return out;
 }
 
@@ -522,6 +569,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       `${lang}: ${n} items in ${Object.values(menu).reduce((a, c) => a + c.sections.length, 0)} sections`,
     );
   }
+  // The café's corrections outrank the printed menu, so they are worth
+  // seeing on every run rather than being buried in the diff.
+  if (cafeApplied.length) {
+    console.log(`\n${cafeApplied.length} café name corrections applied:`);
+    for (const line of cafeApplied) console.log(`  ${line}`);
+  }
+
   // A ligature entry that never fires is either stale or misspelled, and
   // either way it is not doing the job it looks like it is doing. The bare-alef
   // list cannot be replaced by a rule, so the least it can do is stay honest.

@@ -446,7 +446,7 @@ export const arabicMenu: LanguageMenu = {
         title: "أطباق رئيسية",
         items: [
           {
-            name: "كبة لحم",
+            name: "كبة لحمة باللبن",
             description:
               "موزة غنم مطهوة على نار هادئة مع اللبن المطبوخ، الكزبرة، وبرغل بالشعيرية",
             price: 31000,

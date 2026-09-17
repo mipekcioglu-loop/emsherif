@@ -21,11 +21,13 @@
  *    of those side by side in a row of cards look careless, so each frame's
  *    background is measured and mapped onto one warm neutral (TARGET).
  *
- *    A few frames are not seamless shots at all — a salad photographed on a
- *    wooden table, with other dishes in the frame. Correcting those to a bright
- *    neutral would wreck them, so the estimate is rejected when the border of
- *    the frame is too dark or too busy to be a seamless, and the photograph is
- *    passed through untouched. `--report` lists which ones those were.
+ *    Not every frame is a seamless shot. One salad arrived photographed on a
+ *    wooden table with other dishes in shot, and correcting that to a bright
+ *    neutral would have wrecked it, so the estimate is rejected when the border
+ *    of the frame is too dark or too busy to be a seamless and the photograph
+ *    is passed through untouched. The café has since replaced that frame with a
+ *    seamless one, so nothing is rejected today and the run reports none — but
+ *    the guard stays, because the next delivery may not be seamless either.
  *
  * 2. CENTRE-CROP to the middle 85% and then to 4:3, so the dish carries the
  *    frame and every card's photo well has the same proportions.
@@ -132,21 +134,25 @@ const ITEM_OVERRIDES = {
 };
 
 /**
- * Five English dish names are printed twice, in two different sections, and
- * the shoot delivered one photograph for each name. The photographs settle it:
- * the shawarma and msahab frames are wraps on a plate, so they belong to the
- * sandwich; the fries are served plain, which is the mezze. `Lahmeh Mechwiyeh`
- * is the beef and the lamb skewers under one name in English, and the café has
- * since confirmed the one frame stands for both, so it goes to both rows.
- * Value is the 0-based occurrence, in English menu order, that keeps the photo,
- * or a list of them where one photograph serves more than one printing.
+ * Five English dish names are printed twice, in two different sections, so a
+ * name alone does not say which row a frame belongs to.
+ *
+ * Four of them now have a frame for each row: the café sent the Hot Mezze
+ * platters for the two shawarmas, the Masheweh plate for Djej Msahab and the
+ * sandwich for Batata Mekliyeh, alongside the wraps and plain fries already
+ * shipped. `Lahmeh Mechwiyeh` is the beef and the lamb skewers under one name
+ * in English and the café confirmed the one frame stands for both.
+ *
+ * Each entry lists, for each frame in that name's index.json array and in the
+ * same order, which printing of the name it belongs to — 0-based, in English
+ * menu order. A row named by nothing gets no photograph.
  */
 const DUPLICATE_NAMES = {
-  "Shawarma Lahmeh": 1, // Sandwiches, not the Hot Mezze plate
-  "Shawarma Djej": 1, // Sandwiches
-  "Djej Msahab": 0, // Sandwiches, not the Masheweh plate
-  "Batata Mekliyeh": 0, // Hot Mezze — the frame has no coleslaw
-  "Lahmeh Mechwiyeh": [0, 1], // Masheweh, beef and lamb — one frame for both
+  "Shawarma Lahmeh": [[0], [1]], // Hot Mezze platter, then Sandwiches wrap
+  "Shawarma Djej": [[0], [1]], // Hot Mezze platter, then Sandwiches wrap
+  "Djej Msahab": [[0], [1]], // Sandwiches wrap, then Masheweh plate
+  "Batata Mekliyeh": [[0], [1]], // Hot Mezze plain fries, then the sandwich
+  "Lahmeh Mechwiyeh": [[0, 1]], // one frame, beef and lamb rows both
 };
 
 const key = (category, section, item) => `${category}:${section}:${item}`;
@@ -169,24 +175,57 @@ function englishSlots() {
 function buildMapping(index, report) {
   const { slots, counts } = englishSlots();
   const photoOf = new Map(); // English slot key -> slug
+  const files = new Map(); // slug -> its source file in photos/dishes
+
+  /** A frame's slug: its own if index.json names one, else the file's name.
+   *  Named slugs matter where a frame turned out to be a different dish —
+   *  a card for Kibbet Lahmeh bi Laban should not serve fattet-maftoul.webp. */
+  const slugOf = (entry) =>
+    entry.slug ?? path.basename(entry.photo, path.extname(entry.photo));
 
   for (const [slotKey, slot] of slots) {
     const entry = index[slot.name];
     if (!entry) continue;
-    const printedTwice = counts.get(slot.name) > 1;
-    if (printedTwice) {
-      const keepers = DUPLICATE_NAMES[slot.name];
-      if (keepers === undefined) {
+    const frames = Array.isArray(entry) ? entry : [entry];
+    let frame;
+    if (counts.get(slot.name) > 1) {
+      const rows = DUPLICATE_NAMES[slot.name];
+      if (rows === undefined) {
         throw new Error(
-          `"${slot.name}" is printed ${counts.get(slot.name)} times and has one ` +
-            `photograph. Add it to DUPLICATE_NAMES to say which one it belongs to.`,
+          `"${slot.name}" is printed ${counts.get(slot.name)} times, so a name does ` +
+            `not say which row a frame belongs to. Add it to DUPLICATE_NAMES.`,
         );
       }
-      if (![keepers].flat().includes(slot.occurrence)) continue;
+      if (rows.length !== frames.length) {
+        throw new Error(
+          `"${slot.name}" has ${frames.length} frame(s) in index.json but ` +
+            `${rows.length} listed in DUPLICATE_NAMES; they must line up.`,
+        );
+      }
+      const which = rows.findIndex((r) => r.includes(slot.occurrence));
+      if (which < 0) continue; // this printing gets no photograph
+      frame = frames[which];
+    } else {
+      if (frames.length > 1) {
+        throw new Error(
+          `"${slot.name}" is printed once but has ${frames.length} frames in index.json.`,
+        );
+      }
+      frame = frames[0];
     }
-    photoOf.set(slotKey, path.basename(entry.photo, path.extname(entry.photo)));
-    if (entry.verdict && entry.verdict !== "confirmed") {
-      report.verdicts.push(`${slot.name} — ${entry.photo} (${entry.verdict})`);
+    const slug = slugOf(frame);
+    // One slug may serve several rows — Lahmeh Mechwiyeh's single frame covers
+    // both of its printings — but it must always mean the same file, or one
+    // photograph would overwrite another in public/dishes.
+    if (files.has(slug) && files.get(slug) !== frame.photo) {
+      throw new Error(
+        `slug "${slug}" is claimed by both ${files.get(slug)} and ${frame.photo}.`,
+      );
+    }
+    files.set(slug, frame.photo);
+    photoOf.set(slotKey, slug);
+    if (frame.verdict && frame.verdict !== "confirmed") {
+      report.verdicts.push(`${slot.name} — ${frame.photo} (${frame.verdict})`);
     }
   }
 
@@ -235,7 +274,7 @@ function buildMapping(index, report) {
     }
   }
 
-  return { perLanguage, slots };
+  return { perLanguage, slots, files };
 }
 
 /* ------------------------------------------------------------------ *
@@ -769,10 +808,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const slugs = new Set(Object.values(mapping.perLanguage.en));
   let bytes = 0;
   for (const slug of [...slugs].sort()) {
-    const entry = Object.values(index).find(
-      (e) => path.basename(e.photo, path.extname(e.photo)) === slug,
-    );
-    bytes += await processPhoto(path.join(SOURCE, entry.photo), slug, report);
+    const file = mapping.files.get(slug);
+    bytes += await processPhoto(path.join(SOURCE, file), slug, report);
   }
 
   fs.writeFileSync(OUT_MODULE, moduleSource(mapping));
@@ -829,7 +866,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (report.grown.length) {
     console.log(
       `\n${report.grown.length} were left wider than the target rather than lose part of the dish` +
-        `\n  — these are the frames that are not 4:3, so a card cannot match them:`,
+        `\n  — the dish fills too much of the frame for a 4:3 crop to close round it:`,
     );
     for (const line of report.grown) console.log(`  ${line}`);
   }
@@ -840,7 +877,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     for (const line of report.clipped) console.log(`  ${line}`);
   }
   if (report.verdicts.length) {
-    console.log(`\n${report.verdicts.length} identifications the shoot flagged itself:`);
+    console.log(
+      `\n${report.verdicts.length} identifications the shoot or the café flagged:`,
+    );
     for (const line of report.verdicts) console.log(`  ${line}`);
   }
   if (wantsReport) {

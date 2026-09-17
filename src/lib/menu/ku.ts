@@ -36,7 +36,7 @@ export const kurdishMenu: LanguageMenu = {
             price: 12000,
           },
           {
-            name: "مسخەن",
+            name: "مسەخەن",
             description: "مریشکی بە پیاز و سماق لەسەر نان",
             price: 6000,
           },

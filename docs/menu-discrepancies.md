@@ -13,12 +13,12 @@ npm i -D pdfjs-dist && node scripts/audit-prices.mjs && npm uninstall pdfjs-dist
 
 ## 1. Four dishes priced differently between languages
 
-| Dish                                                         | English | Arabic     | Kurdish    |
-| ------------------------------------------------------------ | ------- | ---------- | ---------- |
-| Fattet Batenjen / فتة باذنجان / فەتەی باینجان                | 12,000  | 12,000     | **12,500** |
-| Kefta / كفتة / شفتەی برژاو                                   | 26,000  | 26,000     | **26,500** |
-| Kibbet Lahmeh bi Laban / كبة لحم / کوبەی گۆشت بە ماست        | 31,000  | 31,000     | **24,000** |
-| Fassoulya bi Lahmeh / فاصوليا باللحمة / گۆشتی بەرخ و فاسولیا | 39,000  | **34,000** | 39,000     |
+| Dish                                                          | English | Arabic     | Kurdish    |
+| ------------------------------------------------------------- | ------- | ---------- | ---------- |
+| Fattet Batenjen / فتة باذنجان / فەتەی باینجان                 | 12,000  | 12,000     | **12,500** |
+| Kefta / كفتة / شفتەی برژاو                                    | 26,000  | 26,000     | **26,500** |
+| Kibbet Lahmeh bi Laban / كبة لحمة باللبن / کوبەی گۆشت بە ماست | 31,000  | 31,000     | **24,000** |
+| Fassoulya bi Lahmeh / فاصوليا باللحمة / گۆشتی بەرخ و فاسولیا  | 39,000  | **34,000** | 39,000     |
 
 The odd one out is bolded. Kibbet Lahmeh bi Laban is the largest gap: a guest
 reading the Kurdish menu is quoted 7,000 IQD less than one reading English.
@@ -78,3 +78,27 @@ English says _sesame_; Arabic says عسل (_honey_). Kurdish follows the English
 
 English and Arabic both open with a short welcome. There is no Kurdish
 equivalent in the approved menu, so that language starts at the sections.
+
+## 7. Corrections the café sent after the menus were printed
+
+The café reviewed the live site and sent corrections. They are the authority on
+their own menu, so where a correction and the printed PDF disagree, the
+correction wins and the PDF is out of date. These are applied in
+`CAFE_NAMES` in `scripts/menu-from-pdf.mjs` — after parsing, so `ar.ts` and
+`ku.ts` stay generated — and each one is keyed by position and states the text
+it expects to replace, so the run stops rather than rewriting the wrong dish.
+
+| Dish                   | Language | Printed | Café            |
+| ---------------------- | -------- | ------- | --------------- |
+| Kibbet Lahmeh bi Laban | ar       | كبة لحم | كبة لحمة باللبن |
+| Musakhan               | ku       | مسخەن   | مسەخەن          |
+
+The Arabic printed name drops "bi laban" altogether; the café's form matches the
+English and the Kurdish. Note that this dish is also §1's largest price gap.
+
+They also corrected two photographs, which do not touch the menu text: the frame
+shipped as Fattet Maftoul is Kibbet Lahmeh bi Laban, and Musakhan and Mini
+Lahmeh bi Ajeen had each other's. Both are fixed in `photos/dishes/index.json`.
+
+Four further name spellings and three photograph identifications are still with
+the café and are **not** applied; `docs/pending-content.md` lists them.

@@ -17,20 +17,32 @@
   },
   "Flat White": {
     "photo": "flat-white.jpg",
-    "verdict": "uncertain"
+    "verdict": "confirmed"
   },
   "Hummus with Pine Nuts": {
     "photo": "hummus-with-pine-nuts.jpg",
     "verdict": "confirmed"
   },
-  "Shawarma Lahmeh": {
-    "photo": "shawarma-lahmeh.jpg",
-    "verdict": "confirmed"
-  },
-  "Batata Mekliyeh": {
-    "photo": "batata-mekliyeh.jpg",
-    "verdict": "confirmed"
-  },
+  "Shawarma Lahmeh": [
+    {
+      "photo": "shawarma-lahmeh-mezze.jpg",
+      "verdict": "confirmed"
+    },
+    {
+      "photo": "shawarma-lahmeh.jpg",
+      "verdict": "confirmed"
+    }
+  ],
+  "Batata Mekliyeh": [
+    {
+      "photo": "batata-mekliyeh.jpg",
+      "verdict": "confirmed"
+    },
+    {
+      "photo": "batata-mekliyeh-sandwich.jpg",
+      "verdict": "confirmed"
+    }
+  ],
   "Beefsteak w Batata": {
     "photo": "beefsteak-w-batata.jpg",
     "verdict": "confirmed"
@@ -39,10 +51,16 @@
     "photo": "riyash.jpg",
     "verdict": "confirmed"
   },
-  "Shawarma Djej": {
-    "photo": "shawarma-djej.jpg",
-    "verdict": "confirmed"
-  },
+  "Shawarma Djej": [
+    {
+      "photo": "shawarma-djej-mezze.jpg",
+      "verdict": "confirmed"
+    },
+    {
+      "photo": "shawarma-djej.jpg",
+      "verdict": "confirmed"
+    }
+  ],
   "Kebab": {
     "photo": "kebab.jpg",
     "verdict": "confirmed"
@@ -111,10 +129,6 @@
     "photo": "lentil-soup.jpg",
     "verdict": "confirmed"
   },
-  "Fattet Maftoul": {
-    "photo": "fattet-maftoul.jpg",
-    "verdict": "uncertain"
-  },
   "Arayes Kebab": {
     "photo": "arayes-kebab.jpg",
     "verdict": "confirmed"
@@ -151,10 +165,16 @@
     "photo": "fattet-batenjen.jpg",
     "verdict": "confirmed"
   },
-  "Djej Msahab": {
-    "photo": "djej-msahab.jpg",
-    "verdict": "confirmed"
-  },
+  "Djej Msahab": [
+    {
+      "photo": "djej-msahab.jpg",
+      "verdict": "confirmed"
+    },
+    {
+      "photo": "djej-msahab-masheweh.jpg",
+      "verdict": "uncertain"
+    }
+  ],
   "Batata Mahrouseh": {
     "photo": "batata-mahrouseh.jpg",
     "verdict": "confirmed"
@@ -164,8 +184,9 @@
     "verdict": "confirmed"
   },
   "Mini Lahmeh bi Ajeen | 3 pcs": {
-    "photo": "mini-lahmeh-bi-ajeen-3-pcs.jpg",
-    "verdict": "uncertain"
+    "photo": "musakhan.jpg",
+    "slug": "mini-lahmeh-bi-ajeen-3-pcs",
+    "verdict": "corrected"
   },
   "Burger Em Sherif": {
     "photo": "burger-em-sherif.jpg",
@@ -212,8 +233,9 @@
     "verdict": "confirmed"
   },
   "Musakhan": {
-    "photo": "musakhan.jpg",
-    "verdict": "uncertain"
+    "photo": "mini-lahmeh-bi-ajeen-3-pcs.jpg",
+    "slug": "musakhan",
+    "verdict": "corrected"
   },
   "Shmandar": {
     "photo": "shmandar.jpg",
@@ -393,6 +415,39 @@
   },
   "Rose of Byblos": {
     "photo": "rose-of-byblos.jpg",
+    "verdict": "confirmed"
+  },
+  "Kibbet Lahmeh bi Laban": {
+    "photo": "fattet-maftoul.jpg",
+    "slug": "kibbet-lahmeh-bi-laban",
+    "verdict": "corrected"
+  },
+  "Bahamas": {
+    "photo": "bahamas.jpg",
+    "verdict": "uncertain"
+  },
+  "Kahweh Loubnaniyeh": {
+    "photo": "kahweh-loubnaniyeh.jpg",
+    "verdict": "uncertain"
+  },
+  "Man'ousheh Zaatar": {
+    "photo": "man-ousheh-zaatar.jpg",
+    "verdict": "confirmed"
+  },
+  "Hummus Lahmeh": {
+    "photo": "hummus-lahmeh.jpg",
+    "verdict": "confirmed"
+  },
+  "Hummus Soujouk": {
+    "photo": "hummus-soujouk.jpg",
+    "verdict": "confirmed"
+  },
+  "Kale Freekeh": {
+    "photo": "kale-freekeh.jpg",
+    "verdict": "confirmed"
+  },
+  "Mineral Water — Small": {
+    "photo": "mineral-water-small.jpg",
     "verdict": "confirmed"
   }
 }
