@@ -11,6 +11,38 @@ Re-run the check any time the menus change:
 npm i -D pdfjs-dist && node scripts/audit-prices.mjs && npm uninstall pdfjs-dist
 ```
 
+## There is no earlier document to go back to
+
+The obvious question about everything below is whether some original settles it.
+It does not, and this has been checked rather than assumed.
+
+The client supplied a combined document early on — "Em Sherif Cafe Erbil
+Combined Menu EN KU AR", 38 pages — which the build has never used; we built
+from the three per-language PDFs in `public/menus/`. **It is the same document.**
+The three PDFs are extracts of it:
+
+- Its 38 pages are the English 15, then Kurdish, then Arabic. Every one of those
+  38 pages is identical to the corresponding page of the per-language PDF —
+  identical text runs at identical coordinates, to a tenth of a point. The only
+  pages the per-language files have that the combined does not are two blank
+  Kurdish spacers carrying no text at all.
+- The three per-language PDFs report `pypdf` as their producer; the combined
+  reports none. They were cut out of it by a script.
+- Running this project's own parser over the combined document and over the
+  three PDFs and comparing every dish it finds — name and price — gives
+  **384 dishes compared, 0 differences.**
+
+So the combined document reproduces every disagreement below, exactly. Each of
+the four prices in §1 was also read straight off its page in the combined file
+by position — name and price as they physically sit on the same line, without
+going through the parser — and matches. There is no third reading to prefer and
+no earlier version to defer to.
+
+**That makes every conflict below the café's to settle, not ours.** Two of the
+three menus agreeing is not evidence; it is two against one on a document where
+all three were typeset together. Guessing here means quoting a guest a price
+the kitchen will not honour.
+
 ## 1. Four dishes priced differently between languages
 
 | Dish                                                          | English | Arabic     | Kurdish    |
@@ -23,10 +55,27 @@ npm i -D pdfjs-dist && node scripts/audit-prices.mjs && npm uninstall pdfjs-dist
 The odd one out is bolded. Kibbet Lahmeh bi Laban is the largest gap: a guest
 reading the Kurdish menu is quoted 7,000 IQD less than one reading English.
 
+All four are in the combined document too, at the same values — see above. The
+site reproduces each language as printed, so **only the café can say which
+figure is the real one.** The straight question to put to them is four lines
+long: for each dish, which price should a guest be charged, and should the other
+two languages be corrected to it?
+
 ## 2. The Arabic hot-drinks list is shifted against its prices
 
 English and Kurdish agree with each other. From the second row down, the Arabic
 names are offset by one place, and Flat White is replaced by a decaf espresso.
+
+**This is printed, not a parsing fault of ours** — worth stating plainly,
+because it is the obvious thing to suspect. The rows were read off the page by
+position, name and price as they physically sit on the same line, without going
+through `scripts/menu-from-pdf.mjs`. All three languages print the same price
+column, top to bottom: 7,000 · 9,500 · 10,000 · 10,000 · 6,000 · 7,000 ·
+10,000 · 7,000 · 8,000. English and Kurdish list their drinks in the same order
+against it; the Arabic page does not. `كابوتشينو` genuinely sits on the 9,500
+line. Every price we ship matches the line its name sits on in all three
+languages, so the parser is pairing them exactly as printed and there is nothing
+here for us to fix.
 
 | #   | English / Kurdish        | Arabic                                      |
 | --- | ------------------------ | ------------------------------------------- |
