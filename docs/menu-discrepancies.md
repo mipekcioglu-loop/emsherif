@@ -199,8 +199,18 @@ English says _sesame_; Arabic says عسل (_honey_). Kurdish follows the English
 
 ## 6. Kurdish has no opening passage
 
-English and Arabic both open with a short welcome. There is no Kurdish
-equivalent in the approved menu, so that language starts at the sections.
+English and Arabic both open with a short welcome. **There is still no Kurdish
+equivalent in the printed menu** — the café has never supplied one, and this
+entry stays open for that reason.
+
+The site no longer leaves the Kurdish hero empty, though. The client decided it
+should carry a passage rather than a hole, so `dictionaries.ku.intro` in
+`src/lib/i18n.ts` holds **a translation of the approved Arabic**. It is not
+café-supplied copy and it is not approved wording: it is listed in
+`provisionalKeys` and heads
+[provisional-strings.md](./provisional-strings.md) as the string most worth a
+native speaker's time, being the first thing a Kurdish-reading guest sees. If
+the café ever sends their own passage, it replaces this one.
 
 ## 7. Corrections the café sent after the menus were printed
 

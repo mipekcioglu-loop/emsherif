@@ -324,10 +324,13 @@ how it is used and why there are two files.
   menu text itself, which comes from the PDFs rather than from retyping but
   whose font repairs are worth a second pair of eyes; and the interface strings
   this design added, which are **not approved copy at all** and are listed in
-  [docs/provisional-strings.md](docs/provisional-strings.md).
+  [docs/provisional-strings.md](docs/provisional-strings.md). The first thing on
+  that list is the Kurdish opening passage, below.
 - **Kurdish opening passage** — English and Arabic both open with a short
-  welcome; there is no Kurdish equivalent in the approved menu, so the Kurdish
-  hero carries the eyebrow and the utility column without a passage.
+  welcome and the printed Kurdish menu has none, so on the client's instruction
+  the Kurdish hero carries **a translation of the approved Arabic**. It is not
+  café-supplied and not approved copy; it is the largest piece of unreviewed
+  language on the site and the first thing a Kurdish-reading guest sees.
 - **Everything in [docs/pending-content.md](docs/pending-content.md)** — the
   venue details, three of the four footer URLs, 16 unphotographed dishes, and
   the photograph identifications the café has still to confirm.

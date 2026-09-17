@@ -51,7 +51,14 @@ type Dictionary = {
   changeLanguage: string;
   sections: string;
   currency: string;
-  /** Opening copy from the printed menu. Kurdish has none. */
+  /**
+   * The opening passage. English and Arabic are the printed menu's own words;
+   * the Kurdish menu has no such passage, so that one is a translation of the
+   * approved Arabic and is listed in `provisionalKeys`.
+   *
+   * Optional because a language may legitimately have none — the hero composes
+   * without it.
+   */
   intro?: readonly string[];
   /**
    * The main tabs. The middle category is `sweets` in the printed menu and in
@@ -106,6 +113,7 @@ export const provisionalKeys = {
     "close",
   ],
   ku: [
+    "intro",
     "allergyLabel",
     "allergyBody",
     "venueLink",
@@ -187,6 +195,13 @@ export const dictionaries: Record<Language, Dictionary> = {
     changeLanguage: "گۆڕینی زمان",
     sections: "بەشەکان",
     currency: "دینار",
+    /* Not from the printed menu — a translation of the approved Arabic
+       passage, pending a native speaker. See provisionalKeys and
+       docs/provisional-strings.md. */
+    intro: [
+      "گەرمیی میوانداریی لوبنانی لە ئێم شەریف کافێ بدۆزەرەوە، پەناگەیەکی ئارام لە دڵی شاردا.",
+      "چێژ لە خواردنێک وەربگرە کە لە نەریتی خێزانییەوە وەرگیراوە و شێوازی هاوچەرخ لەگەڵ تامی ڕەسەن و نەریتە خۆشەویستەکان تێکەڵ دەکات.",
+    ],
     categoryLabels: { food: "خواردن", sweets: "شیرینی", drinks: "خواردنەوە" },
     /* Everything from here down is provisional — see provisionalKeys above. */
     search: "گەڕان لە لیستدا",
