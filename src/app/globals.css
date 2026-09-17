@@ -1,18 +1,26 @@
 @import "tailwindcss";
 
 /*
- * Brand tokens, taken from the printed Em Sherif Café menu:
- * deep navy on a warm ivory paper stock.
+ * Brand tokens, taken from the printed Em Sherif Café menu: deep navy on a
+ * warm ivory paper stock. Everything else on the page is an opacity of the
+ * navy — one ink, a few weights of presence — so `text-ink/62`, `border-ink/15`
+ * and friends are the whole palette. Never a raw hex in a component.
  */
 @theme {
   --color-ink: #183f67;
   --color-paper: #fffff5;
+  /* The well a dish photograph sits in, and the neutral the photographs are
+     white-balanced onto in scripts/dish-photos.mjs. Keep the two in step. */
+  --color-shot: #f3f2eb;
 
   /* The --font-* sources are injected by next/font in app/layout.tsx. */
-  --font-display: var(--font-cormorant), "Times New Roman", serif;
+  --font-display: var(--font-cormorant), Georgia, "Times New Roman", serif;
   --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Arabic and Kurdish: a naskh for display, a sans for running text. */
+  --font-naskh: var(--font-naskh-arabic), var(--font-sans-arabic), serif;
+  --font-arabic: var(--font-sans-arabic), var(--font-naskh-arabic), sans-serif;
 
-  --tracking-brand: 0.18em;
+  --tracking-brand: 0.2em;
 }
 
 @layer base {
@@ -23,9 +31,9 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* The display face is Latin-only, so Arabic and Kurdish already fall back to
-     a system face. Drop the italic too, rather than let the browser synthesise
-     an oblique the printed menu never had. */
+  /* The display face is Latin-only, so Arabic and Kurdish fall back to the
+     naskh. Drop the italic too, rather than let the browser synthesise an
+     oblique the printed menu never had. */
   [dir="rtl"] .font-display {
     font-style: normal;
   }
@@ -36,17 +44,249 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-ink);
+    outline: 2px solid currentColor;
     outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
 @layer components {
-  /* Small caps label, matching the printed menu's section furniture. */
+  /*
+   * The wordmark, painted rather than placed: the logo PNG is used as a mask so
+   * the same asset can be ivory on the navy header and navy on an ivory card.
+   * `--wordmark` is set on <html> in app/layout.tsx, where basePath is known.
+   */
+  .wordmark {
+    display: block;
+    aspect-ratio: 774 / 471;
+    background-color: currentColor;
+    -webkit-mask-image: var(--wordmark);
+    mask-image: var(--wordmark);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
+
+  /*
+   * Latin small caps label. Letterspaced caps are a Latin device: in Arabic and
+   * Kurdish the tracking breaks letter-joining and there is no case to change,
+   * so every one of these labels resets to plain type a size larger.
+   */
   .eyebrow {
-    font-size: 0.6875rem;
+    font-size: 0.625rem;
     font-weight: 600;
     letter-spacing: var(--tracking-brand);
     text-transform: uppercase;
+  }
+
+  [dir="rtl"] .eyebrow {
+    font-family: var(--font-arabic);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  /* Main category tabs — Latin caps in the navy header. A shade smaller and
+     tighter on a phone, where three of them share 390px. */
+  .tab-label {
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  @media (width >= 40rem) {
+    .tab-label {
+      font-size: 10.5px;
+      letter-spacing: var(--tracking-brand);
+    }
+  }
+
+  [dir="rtl"] .tab-label {
+    font-family: var(--font-arabic);
+    font-size: 13px;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  /* Sub-category filter pills — serif, in the body, so they never read as the
+     tabs above them. */
+  .chip-label {
+    font-family: var(--font-display);
+    font-size: 15.5px;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+    line-height: 1.25;
+  }
+
+  [dir="rtl"] .chip-label {
+    font-family: var(--font-naskh);
+    font-size: 13.5px;
+  }
+
+  .section-heading {
+    font-family: var(--font-display);
+    font-size: 31px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.012em;
+  }
+
+  [dir="rtl"] .section-heading {
+    font-family: var(--font-naskh);
+    font-size: 25px;
+    line-height: 1.35;
+    letter-spacing: 0;
+  }
+
+  @media (width >= 64rem) {
+    .section-heading {
+      font-size: 44px;
+    }
+
+    [dir="rtl"] .section-heading {
+      font-size: 33px;
+    }
+  }
+
+  .dish-name {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.16;
+    letter-spacing: -0.005em;
+  }
+
+  @media (width >= 64rem) {
+    /* A hair smaller in the three-column grid than on the phone. */
+    .dish-name {
+      font-size: 21.5px;
+    }
+  }
+
+  [dir="rtl"] .dish-name {
+    font-family: var(--font-naskh);
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0;
+  }
+
+  .dish-description {
+    font-size: 12.5px;
+    line-height: 1.58;
+  }
+
+  [dir="rtl"] .dish-description {
+    font-family: var(--font-arabic);
+    line-height: 1.85;
+  }
+
+  /*
+   * The price lockup: amount then currency, adjacent, in all three languages.
+   * It is tone that makes the currency secondary, not distance — so the
+   * tracking is cut to .04em and it sits right after the number. RTL reverses
+   * it by direction alone, never by a bidi override.
+   */
+  .price-amount {
+    font-size: 15.5px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .price-currency {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* Arabic at 600 and 10.5px closes its counters at arm's length in low
+     light, so the currency word eases to 500 and lifts a point. */
+  [dir="rtl"] .price-currency {
+    font-family: var(--font-arabic);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .footer-link-label {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 500;
+  }
+
+  [dir="rtl"] .footer-link-label {
+    font-family: var(--font-naskh);
+    font-size: 16px;
+  }
+
+  @media (width >= 40rem) {
+    .footer-link-label {
+      font-size: 18px;
+    }
+  }
+
+  /* Running text in the venue sheet and the allergy line. */
+  [dir="rtl"] .body-rtl {
+    font-family: var(--font-arabic);
+    line-height: 1.9;
+  }
+
+  /* The sub-category rail fades out at its trailing edge so a guest can see
+     there is more to scroll. Mirrored for right-to-left. */
+  .rail-fade {
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 34px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 34px), transparent);
+  }
+
+  [dir="rtl"] .rail-fade {
+    -webkit-mask-image: linear-gradient(270deg, #000 calc(100% - 34px), transparent);
+    mask-image: linear-gradient(270deg, #000 calc(100% - 34px), transparent);
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer utilities {
+  /* The scroll-pagination loader. */
+  @keyframes dish-loader-pulse {
+    0%,
+    100% {
+      opacity: 0.18;
+      transform: translateY(0);
+    }
+    45% {
+      opacity: 0.7;
+      transform: translateY(-3px);
+    }
+  }
+
+  .loader-dot {
+    animation: dish-loader-pulse 1.25s ease-in-out infinite;
   }
 }

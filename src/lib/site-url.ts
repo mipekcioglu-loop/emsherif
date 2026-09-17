@@ -14,3 +14,14 @@ export const siteUrl = (
 export function withBasePath(path: string): string {
   return `${basePath}${path}`;
 }
+
+/**
+ * The static export writes `/en/food/index.html` and is served from a plain
+ * file host, so a hand-written URL has to carry the trailing slash the export
+ * was built with. `<Link>` handles this itself; raw hrefs do not.
+ */
+export const trailingSlash = process.env.STATIC_EXPORT === "true";
+
+export function routeHref(path: string): string {
+  return `${withBasePath(path)}${trailingSlash && !path.endsWith("/") ? "/" : ""}`;
+}

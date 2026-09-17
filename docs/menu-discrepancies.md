@@ -44,6 +44,13 @@ Net effect for an Arabic-reading guest: cappuccino is 500 cheaper, café blanc
 4,000 dearer, american 1,000 cheaper, doppio 2,500 cheaper — and there is no
 flat white.
 
+This one also reaches the photography. Because the Arabic names are offset
+against their prices, matching photographs by row would put the doppio's
+photograph on the cappuccino. `ITEM_OVERRIDES` in `scripts/dish-photos.mjs`
+re-points that one section by name instead, so an Arabic-reading guest sees the
+drink they are reading about. The decaf espresso, which the other two menus do
+not list, has no photograph and falls back to the wordmark card.
+
 ## 3. Two grills share a name in English only
 
 The English menu lists **LAHMEH MECHWIYEH** twice, at 29,000 and 36,000. Arabic

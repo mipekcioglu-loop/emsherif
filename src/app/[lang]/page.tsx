@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Logo } from "@/components/ui/logo";
-import { categories, dictionaries, isLanguage, languages } from "@/lib/i18n";
+import { LanguageLanding } from "@/components/language-landing";
+import { dictionaries, isLanguage, languages } from "@/lib/i18n";
 
 export function generateStaticParams() {
   return languages.map((lang) => ({ lang }));
@@ -14,51 +13,16 @@ export async function generateMetadata({
 }: PageProps<"/[lang]">): Promise<Metadata> {
   const { lang } = await params;
   if (!isLanguage(lang)) return {};
-  return { title: `${dictionaries[lang].menuName} | Em Sherif Café Erbil` };
+  return {
+    title: `${dictionaries[lang].menuName} | Em Sherif Café Erbil`,
+    robots: { index: false, follow: true },
+  };
 }
 
-export default async function CategoryPickerPage({ params }: PageProps<"/[lang]">) {
+/* "/en" is not a page of its own — it opens the first category. */
+export default async function LanguagePage({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
   if (!isLanguage(lang)) notFound();
 
-  const dictionary = dictionaries[lang];
-
-  return (
-    <main
-      dir={dictionary.dir}
-      lang={dictionary.locale}
-      className="flex min-h-dvh flex-col items-center px-6 pt-12 pb-12 text-center"
-    >
-      <Logo priority />
-
-      {/* The printed menu opens on this passage, so the digital menu does too. */}
-      {dictionary.intro ? (
-        <div className="font-display mt-12 max-w-md space-y-5 text-xl leading-snug text-balance italic">
-          {dictionary.intro.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
-          ))}
-        </div>
-      ) : null}
-
-      <p className="eyebrow mt-12">{dictionary.menuName}</p>
-      <h1 className="font-display mt-3 text-4xl">{dictionary.chooseSection}</h1>
-      <p className="mt-3 text-sm">{dictionary.chooseSectionHint}</p>
-
-      <nav aria-label={dictionary.sections} className="mt-8 grid w-full max-w-sm gap-2.5">
-        {categories.map((category) => (
-          <Link
-            key={category}
-            href={`/${lang}/${category}`}
-            className="border-ink/30 hover:bg-ink hover:text-paper flex min-h-14 items-center justify-center border px-3 text-sm font-semibold tracking-[0.1em] uppercase transition-colors"
-          >
-            {dictionary.categoryLabels[category]}
-          </Link>
-        ))}
-      </nav>
-
-      <Link href="/" className="mt-7 text-sm underline underline-offset-4">
-        {dictionary.changeLanguage}
-      </Link>
-    </main>
-  );
+  return <LanguageLanding language={lang} />;
 }
