@@ -31,7 +31,11 @@ export function DishCard({
     <article className="bg-paper border-ink/15 hover:border-ink/28 flex flex-col overflow-hidden rounded-[5px] border transition-[box-shadow,border-color,transform] duration-[250ms] hover:-translate-y-0.5 hover:shadow-[0_16px_34px_-16px_color-mix(in_srgb,var(--color-ink)_34%,transparent)]">
       {/* Shorter crop on a phone: two whole cards land in view instead of one
           and a half, which is a long scroll through 128 dishes. */}
-      <div className="border-ink/8 bg-shot aspect-[3/2] border-b lg:aspect-[4/3]">
+      {/* `relative`, and the contents absolutely placed, because the well is a
+          flex item: with the photograph in normal flow its own height became
+          the well's minimum, the 3:2 never applied on a phone, and a card with
+          a photograph stood 30px taller than a card without one. */}
+      <div className="border-ink/8 bg-shot relative aspect-[3/2] border-b lg:aspect-[4/3]">
         {dish.photo ? (
           /* Not next/image: these are already cropped, white-balanced and
              emitted at the two widths the grid asks for, by
@@ -52,14 +56,14 @@ export function DishCard({
             loading={priority ? "eager" : "lazy"}
             fetchPriority={priority ? "high" : undefined}
             decoding="async"
-            className="h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         ) : (
           /* 29 dishes were never photographed. An empty card must not look
              broken: the well keeps its slot and becomes the wordmark, debossed
              at 17% on an ivory-to-navy wash — quiet on purpose, so a dish
              without a photograph never outshouts one with. */
-          <div className="from-ink/4 to-ink/9 text-ink flex h-full w-full items-center justify-center bg-linear-[168deg]">
+          <div className="from-ink/4 to-ink/9 text-ink absolute inset-0 flex items-center justify-center bg-linear-[168deg]">
             <Wordmark width="54%" className="opacity-[0.17]" />
           </div>
         )}

@@ -66,8 +66,41 @@ const MIN_BACKGROUND_LUMA = 200;
 const MAX_BACKGROUND_SPREAD = 26;
 
 const WIDTHS = [340, 540];
+/** Fallback crop, for a frame whose dish cannot be located. */
 const CROP = 0.85;
 const ASPECT = 4 / 3;
+
+/* ------------------------------------------------------------------ *
+ * Framing the dish to a constant size
+ * ------------------------------------------------------------------ */
+
+/**
+ * The shoot was not framed consistently — some dishes were shot close and
+ * some from much further back — so cropping every frame by the same fraction
+ * preserved that, and scrolling the grid the plates jumped between big and
+ * small. Measured over the 99 frames, the largest subject took 2.2x as much
+ * of its frame as the smallest. So the dish is located in each frame and the
+ * crop is sized from it, which makes the dish, not the frame, the thing that
+ * is the same size on every card.
+ */
+
+/** Analysis resolution for locating the dish. */
+const FIND_WIDTH = 240;
+/** Gradient magnitude, on a 0-255 luma scale, that counts as detail. */
+const FIND_EDGE = 12;
+/** A row or column is part of the dish once this much of it carries detail. */
+const FIND_PROFILE = 0.04;
+/**
+ * How much of the card the dish should fill, measured against the phone well
+ * rather than the desktop one. The well is 3:2 on a phone and 4:3 above it,
+ * and the photograph is 4:3 — so a phone shows only the middle 88.9% of the
+ * image's height and is the tighter of the two. Framing to the phone means
+ * the dish is never clipped there, and sits with a little more air on a
+ * desktop.
+ */
+const SUBJECT_TARGET = 0.88;
+/** The fraction of the image's height a phone actually shows. */
+const PHONE_VISIBLE = 4 / 3 / (3 / 2);
 
 /* ------------------------------------------------------------------ *
  * Which dish a photograph belongs to
@@ -260,6 +293,281 @@ function gainsFor(background) {
   });
 }
 
+/**
+ * Locates the dish in a frame, as fractions of the frame.
+ *
+ * By local contrast, not by colour. Colour does not separate them on this
+ * set: the seamless carries a vignette, so its corners sit further from the
+ * mean than a grey plate does, and the palest food — the Musakhan flatbread —
+ * is the same tone as the paper behind it. What does separate them is detail.
+ * The seamless is smooth everywhere; a dish has edges and texture.
+ *
+ * Returns null when nothing stands out, and the caller falls back to the
+ * centre crop.
+ */
+async function findSubject(file) {
+  const { data, info } = await sharp(file)
+    .resize(FIND_WIDTH, FIND_WIDTH, { fit: "inside" })
+    .greyscale()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const w = info.width;
+  const h = info.height;
+  const at = (x, y) => data[y * w + x];
+
+  // The outermost ring is skipped. A couple of frames carry a dark sliver in
+  // the last pixel or two — the lip of the backdrop — and without this it
+  // reads as part of the dish, which both widens the crop and, worse, makes
+  // the dish look like it reaches that edge.
+  const BORDER = 2;
+  const detail = new Uint8Array(w * h);
+  for (let y = BORDER; y < h - BORDER; y++) {
+    for (let x = BORDER; x < w - BORDER; x++) {
+      const g =
+        Math.abs(at(x + 1, y) - at(x - 1, y)) + Math.abs(at(x, y + 1) - at(x, y - 1));
+      if (g > FIND_EDGE) detail[y * w + x] = 1;
+    }
+  }
+
+  // Grow the detail, so that a dish reads as one region rather than as a
+  // scattering of its own edges.
+  const r = 3;
+  const grown = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let hit = 0;
+      for (let dy = -r; dy <= r && !hit; dy++) {
+        for (let dx = -r; dx <= r && !hit; dx++) {
+          const yy = y + dy;
+          const xx = x + dx;
+          if (yy >= 0 && yy < h && xx >= 0 && xx < w && detail[yy * w + xx]) hit = 1;
+        }
+      }
+      grown[y * w + x] = hit;
+    }
+  }
+  // Fill each line between its outermost detail, which closes a ring of edges
+  // into a solid plate; a pixel has to be inside on both axes to count, so a
+  // single stray mark cannot fill a row.
+  const rowFill = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) {
+    let lo = -1;
+    let hi = -1;
+    for (let x = 0; x < w; x++) {
+      if (!grown[y * w + x]) continue;
+      if (lo < 0) lo = x;
+      hi = x;
+    }
+    for (let x = lo; x >= 0 && x <= hi; x++) rowFill[y * w + x] = 1;
+  }
+  const solid = new Uint8Array(w * h);
+  for (let x = 0; x < w; x++) {
+    let lo = -1;
+    let hi = -1;
+    for (let y = 0; y < h; y++) {
+      if (!grown[y * w + x]) continue;
+      if (lo < 0) lo = y;
+      hi = y;
+    }
+    for (let y = lo; y >= 0 && y <= hi; y++) solid[y * w + x] = rowFill[y * w + x];
+  }
+
+  const rows = new Array(h).fill(0);
+  const cols = new Array(w).fill(0);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (!solid[y * w + x]) continue;
+      rows[y]++;
+      cols[x]++;
+    }
+  }
+  const span = (profile, across) => {
+    const min = Math.max(1, Math.round(across * FIND_PROFILE));
+    const lo = profile.findIndex((v) => v >= min);
+    if (lo < 0) return null;
+    let hi = profile.length - 1;
+    while (hi > lo && profile[hi] < min) hi--;
+    return [lo, hi + 1];
+  };
+  const ys = span(rows, w);
+  const xs = span(cols, h);
+  if (!ys || !xs) return null;
+  return {
+    x0: xs[0] / w,
+    x1: xs[1] / w,
+    y0: ys[0] / h,
+    y1: ys[1] / h,
+    wFrac: (xs[1] - xs[0]) / w,
+    hFrac: (ys[1] - ys[0]) / h,
+  };
+}
+
+/**
+ * The window to take out of a frame so the dish lands at SUBJECT_TARGET.
+ *
+ * Centred on the dish rather than on the frame, because a good number of
+ * these are composed off-centre, but slid back inside the photograph wherever
+ * it will fit — an off-centre dish is not a reason to invent background.
+ *
+ * Where the dish was shot too close for the window to fit at all, the canvas
+ * is extended instead of the dish being left oversized — by replicating the
+ * edge of the seamless, which is smooth enough that more of it does not read
+ * as an edit. It is capped at MAX_EXTEND, though: past that the invented area
+ * would be most of the picture. Frames that hit the cap keep a dish larger
+ * than the target and are named in the run's report.
+ */
+const MAX_EXTEND = 0.12;
+
+function windowFor(subject, meta) {
+  const bw = subject.wFrac * meta.width;
+  const bh = subject.hFrac * meta.height;
+  let height = Math.max(
+    bh / (PHONE_VISIBLE * SUBJECT_TARGET),
+    bw / SUBJECT_TARGET / ASPECT,
+  );
+  let width = height * ASPECT;
+
+  // Never invent more than MAX_EXTEND of the frame on an axis.
+  const room = Math.min(
+    1,
+    (meta.width * (1 + MAX_EXTEND)) / width,
+    (meta.height * (1 + MAX_EXTEND)) / height,
+  );
+  const capped = room < 1;
+  width = Math.round(width * room);
+  height = Math.round(height * room);
+
+  // The cap must never cost us part of the dish: a crop that cuts the plate
+  // is worse than a dish that is bigger than its neighbours. Where the capped
+  // window would not hold the whole of it, grow it back until it does, with a
+  // little air, and measured against the phone well because that is the one
+  // that crops. Two portrait frames need this.
+  const contain = Math.max(bh / PHONE_VISIBLE, bw / ASPECT) * 1.04;
+  let grown = false;
+  if (contain > height) {
+    height = Math.round(contain);
+    width = Math.round(height * ASPECT);
+    grown = true;
+  }
+
+  // Centre on the dish, then slide back inside the frame as far as the window
+  // allows, so that padding is only ever used for a window too big to fit.
+  const cx = ((subject.x0 + subject.x1) / 2) * meta.width;
+  const cy = ((subject.y0 + subject.y1) / 2) * meta.height;
+  const place = (centre, size, extent) => {
+    const at = centre - size / 2;
+    if (size >= extent) return Math.round((extent - size) / 2);
+    return Math.round(Math.min(Math.max(at, 0), extent - size));
+  };
+  return {
+    width,
+    height,
+    left: place(cx, width, meta.width),
+    top: place(cy, height, meta.height),
+    capped: capped && !grown,
+    grown,
+  };
+}
+
+/**
+ * Extends a frame outwards by continuing its own edge.
+ *
+ * Not sharp's `extendWith: "copy"`, which repeats the outermost pixel exactly:
+ * five of these frames have something dark sitting in one corner — the lip of
+ * the backdrop, most likely — and repeating that one pixel paints a solid
+ * block across the whole corner. Not a flat fill either, because the seamless
+ * is vignetted and darkens towards its edges, so any single colour meets it
+ * at a visible band.
+ *
+ * Instead each edge line is median-filtered along its length and that is what
+ * gets repeated. The median follows the vignette but ignores a stray dark
+ * pixel, so the extension continues the paper rather than the blemish.
+ */
+const EDGE_DEPTH = 3; // rows sampled inwards
+const EDGE_RUN = 9; // pixels sampled along the edge
+/**
+ * How far inside the frame to read the edge from. Several frames have a dark
+ * lip in the outermost row or two — the bottom of the backdrop — and
+ * repeating that paints a grey band. The outer few pixels are read past, and
+ * overwritten with what is just inside them, but only on a side the dish does
+ * not reach: nothing that could be food is painted over.
+ */
+const EDGE_INSET = 4;
+
+async function extendByEdge(buffer, pad, safe) {
+  const { data, info } = await sharp(buffer)
+    .removeAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const { width: W, height: H, channels: C } = info;
+  const outW = W + pad.left + pad.right;
+  const outH = H + pad.top + pad.bottom;
+  const out = Buffer.alloc(outW * outH * 3);
+
+  // The rectangle the photograph is read from: pulled in on any side that is
+  // being extended and that the dish does not reach.
+  const in0x = pad.left && safe.left ? EDGE_INSET : 0;
+  const in1x = W - 1 - (pad.right && safe.right ? EDGE_INSET : 0);
+  const in0y = pad.top && safe.top ? EDGE_INSET : 0;
+  const in1y = H - 1 - (pad.bottom && safe.bottom ? EDGE_INSET : 0);
+
+  const at = (x, y, c) => data[(y * W + x) * C + c];
+  /** Median of a patch running along an edge, for one channel. */
+  const edgeMedian = (x, y, c, horizontal) => {
+    const v = [];
+    for (let d = 0; d < EDGE_DEPTH; d++) {
+      for (let k = -EDGE_RUN; k <= EDGE_RUN; k++) {
+        const xx = horizontal
+          ? Math.min(W - 1, Math.max(0, x + k))
+          : Math.min(W - 1, Math.max(0, x + (x === 0 ? d : -d)));
+        const yy = horizontal
+          ? Math.min(H - 1, Math.max(0, y + (y === 0 ? d : -d)))
+          : Math.min(H - 1, Math.max(0, y + k));
+        v.push(at(xx, yy, c));
+      }
+    }
+    v.sort((a, b) => a - b);
+    return v[v.length >> 1];
+  };
+
+  // Precompute the four smoothed edges once, read at the inset boundary.
+  const lines = { left: [], right: [], top: [], bottom: [] };
+  for (let y = 0; y < H; y++) {
+    lines.left.push([0, 1, 2].map((c) => edgeMedian(in0x, y, c, false)));
+    lines.right.push([0, 1, 2].map((c) => edgeMedian(in1x, y, c, false)));
+  }
+  for (let x = 0; x < W; x++) {
+    lines.top.push([0, 1, 2].map((c) => edgeMedian(x, in0y, c, true)));
+    lines.bottom.push([0, 1, 2].map((c) => edgeMedian(x, in1y, c, true)));
+  }
+
+  for (let oy = 0; oy < outH; oy++) {
+    const sy = oy - pad.top;
+    const cy = Math.min(in1y, Math.max(in0y, sy));
+    for (let ox = 0; ox < outW; ox++) {
+      const sx = ox - pad.left;
+      const cx = Math.min(in1x, Math.max(in0x, sx));
+      const i = (oy * outW + ox) * 3;
+      const outsideX = sx !== cx;
+      const outsideY = sy !== cy;
+      for (let c = 0; c < 3; c++) {
+        let v;
+        if (!outsideX && !outsideY) v = at(cx, cy, c);
+        else if (outsideX && !outsideY) v = (sx < 0 ? lines.left : lines.right)[cy][c];
+        else if (!outsideX && outsideY) v = (sy < 0 ? lines.top : lines.bottom)[cx][c];
+        else {
+          // A corner: the average of the two edges that meet there.
+          const h = (sx < 0 ? lines.left : lines.right)[cy][c];
+          const v2 = (sy < 0 ? lines.top : lines.bottom)[cx][c];
+          v = Math.round((h + v2) / 2);
+        }
+        out[i + c] = v;
+      }
+    }
+  }
+  return { buffer: out, width: outW, height: outH };
+}
+
 async function processPhoto(file, slug, report) {
   const background = await measureBackground(file);
   const gains = gainsFor(background);
@@ -273,23 +581,105 @@ async function processPhoto(file, slug, report) {
   }
 
   const meta = await sharp(file).metadata();
-  // Middle 85% of the frame, then 4:3 out of that.
-  let width = Math.round(meta.width * CROP);
-  let height = Math.round(meta.height * CROP);
-  if (width / height > ASPECT) width = Math.round(height * ASPECT);
-  else height = Math.round(width / ASPECT);
-  const left = Math.round((meta.width - width) / 2);
-  const top = Math.round((meta.height - height) / 2);
+  const subject = gains ? await findSubject(file) : null;
+  let win;
+  if (subject) {
+    win = windowFor(subject, meta);
+  } else {
+    // No seamless to measure, or no dish to find: the middle 85%, as before.
+    let width = Math.round(meta.width * CROP);
+    let height = Math.round(meta.height * CROP);
+    if (width / height > ASPECT) width = Math.round(height * ASPECT);
+    else height = Math.round(width / ASPECT);
+    win = {
+      width,
+      height,
+      left: Math.round((meta.width - width) / 2),
+      top: Math.round((meta.height - height) / 2),
+    };
+    report.centreCropped.push(slug);
+  }
+
+  // How far the window runs past each edge of the photograph.
+  const pad = {
+    left: Math.max(0, -win.left),
+    top: Math.max(0, -win.top),
+    right: Math.max(0, win.left + win.width - meta.width),
+    bottom: Math.max(0, win.top + win.height - meta.height),
+  };
+  const padded = pad.left + pad.right + pad.top + pad.bottom;
+  if (padded) {
+    report.extended.push(
+      `${slug} (+${pad.left + pad.right}px across, +${pad.top + pad.bottom}px down)`,
+    );
+  }
+  if (subject) {
+    report.framed.push({
+      slug,
+      was: Math.max(subject.wFrac / ASPECT, subject.hFrac),
+      window: `${win.width}x${win.height}`,
+      source: `${meta.width}x${meta.height}`,
+    });
+    // Does the window still hold the whole dish? Anything that does not is
+    // worth knowing about — a crop that takes the edge off a plate is worse
+    // than the unevenness this is fixing.
+    const inside =
+      subject.x0 * meta.width >= win.left - 0.5 &&
+      subject.x1 * meta.width <= win.left + win.width + 0.5 &&
+      subject.y0 * meta.height >= win.top - 0.5 &&
+      subject.y1 * meta.height <= win.top + win.height + 0.5;
+    if (!inside) {
+      const lost = [
+        subject.x0 * meta.width < win.left ? "left" : null,
+        subject.x1 * meta.width > win.left + win.width ? "right" : null,
+        subject.y0 * meta.height < win.top ? "top" : null,
+        subject.y1 * meta.height > win.top + win.height ? "bottom" : null,
+      ].filter(Boolean);
+      report.clipped.push(
+        `${slug} (${lost.join(", ")}) — source ${meta.width}x${meta.height}`,
+      );
+    }
+    if (win.capped) report.capped.push(slug);
+    if (win.grown) {
+      report.grown.push(
+        `${slug} — source ${meta.width}x${meta.height}, window ${win.width}x${win.height}`,
+      );
+    }
+  }
 
   let bytes = 0;
   for (const target of WIDTHS) {
-    let pipeline = sharp(file).extract({ left, top, width, height });
+    // White balance first, so that the neutral the seamless is mapped onto is
+    // also the colour the canvas is extended with and the join is invisible.
+    let pipeline = sharp(file);
     if (gains) pipeline = pipeline.linear(gains, [0, 0, 0]);
+    if (padded) {
+      // A side the dish reaches must not be read past, or the crop would eat
+      // into the dish itself.
+      const safe = subject
+        ? {
+            left: subject.x0 * meta.width > EDGE_INSET,
+            right: subject.x1 * meta.width < meta.width - EDGE_INSET,
+            top: subject.y0 * meta.height > EDGE_INSET,
+            bottom: subject.y1 * meta.height < meta.height - EDGE_INSET,
+          }
+        : { left: false, right: false, top: false, bottom: false };
+      const grown = await extendByEdge(await pipeline.toBuffer(), pad, safe);
+      pipeline = sharp(grown.buffer, {
+        raw: { width: grown.width, height: grown.height, channels: 3 },
+      });
+    }
     const out = path.join(OUT_IMAGES, `${slug}-${target}.webp`);
     const info = await pipeline
-      // Three of the source frames are narrower than the widest output, so a
-      // little enlargement is allowed rather than emitting a file that is
-      // narrower than the width its srcset descriptor claims.
+      .extract({
+        left: win.left + pad.left,
+        top: win.top + pad.top,
+        width: win.width,
+        height: win.height,
+      })
+      // Some source frames are narrower than the widest output, and a window
+      // sized from the dish can be wider still, so a little enlargement is
+      // allowed rather than emitting a file narrower than its srcset says.
       .resize(target, Math.round(target / ASPECT), { fit: "cover" })
       .webp({ quality: 74, effort: 6 })
       .toFile(out);
@@ -341,7 +731,17 @@ ${Object.keys(MENUS)
 
 const wantsReport = process.argv.includes("--report");
 const index = JSON.parse(fs.readFileSync(path.join(SOURCE, "index.json"), "utf8"));
-const report = { verdicts: [], passedThrough: [], corrected: [] };
+const report = {
+  verdicts: [],
+  passedThrough: [],
+  corrected: [],
+  framed: [],
+  extended: [],
+  centreCropped: [],
+  capped: [],
+  clipped: [],
+  grown: [],
+};
 
 const mapping = buildMapping(index, report);
 
@@ -378,6 +778,48 @@ if (report.passedThrough.length) {
     `\n${report.passedThrough.length} left unbalanced — no seamless to measure:`,
   );
   for (const line of report.passedThrough) console.log(`  ${line}`);
+}
+if (report.framed.length) {
+  const scales = report.framed.map((f) => f.was).sort((a, b) => a - b);
+  console.log(
+    `\n${report.framed.length} frames re-framed to a constant dish size. Before, the dish ` +
+      `filled\n  between ${(scales[0] * 100).toFixed(0)}% and ${(scales[scales.length - 1] * 100).toFixed(0)}% of its frame ` +
+      `(${(scales[scales.length - 1] / scales[0]).toFixed(1)}x); every card now shows it at ` +
+      `${(SUBJECT_TARGET * 100).toFixed(0)}% of the phone well.`,
+  );
+}
+if (report.centreCropped.length) {
+  console.log(
+    `\n${report.centreCropped.length} kept the centre crop — no seamless to measure, so no dish to find:`,
+  );
+  for (const slug of report.centreCropped) console.log(`  ${slug}`);
+}
+if (report.extended.length) {
+  console.log(
+    `\n${report.extended.length} were shot close enough that the frame had to be extended with the` +
+      `\n  seamless neutral to bring the dish down to size:`,
+  );
+  for (const line of report.extended) console.log(`  ${line}`);
+}
+if (report.capped.length) {
+  console.log(
+    `\n${report.capped.length} could not reach the target without inventing more than ` +
+      `${(MAX_EXTEND * 100).toFixed(0)}% of the\n  frame, so they keep a dish larger than the rest:`,
+  );
+  for (const slug of report.capped) console.log(`  ${slug}`);
+}
+if (report.grown.length) {
+  console.log(
+    `\n${report.grown.length} were left wider than the target rather than lose part of the dish` +
+      `\n  — these are the frames that are not 4:3, so a card cannot match them:`,
+  );
+  for (const line of report.grown) console.log(`  ${line}`);
+}
+if (report.clipped.length) {
+  console.log(
+    `\n${report.clipped.length} LOSE PART OF THE DISH at the edge of the window:`,
+  );
+  for (const line of report.clipped) console.log(`  ${line}`);
 }
 if (report.verdicts.length) {
   console.log(`\n${report.verdicts.length} identifications the shoot flagged itself:`);

@@ -119,10 +119,29 @@ be a seamless — one salad is shot on a wooden table, with other dishes in
 frame — is left alone rather than wrecked, and the run says which ones those
 were.
 
-Each photograph is then centre-cropped to the middle 85% and to 4:3, and written
-as WebP at 340px and 540px: 99 photographs, 2.1 MB in total, about 11 KB each.
-The card well crops further to 3:2 on a phone, so two whole cards land in view
-instead of one and a half.
+**The dish, not the frame, is what is cropped to a constant size.** The shoot
+was not framed consistently — some dishes were shot close, some from much
+further back — so cropping every frame by the same fraction kept that, and
+scrolling the grid the plates jumped between big and small: the largest dish
+took 2.2x as much of its frame as the smallest. The script now finds the dish
+in each frame and sizes the crop from it, so every card shows the dish at 88%
+of the well.
+
+Finding it is done by local contrast, not by colour. Colour does not separate
+dish from seamless here — the paper is vignetted, so its corners sit further
+from the mean than a grey plate does, and the palest food is the same tone as
+the paper behind it. Detail does: the seamless is smooth, a dish has edges.
+
+Where a dish was shot too close for the crop to fit around it, the canvas is
+extended by continuing the seamless outwards rather than the dish being left
+oversized, capped at 12% of the frame. Four frames are not 4:3 at all — two are
+portrait — and those are left wider than the rest rather than have the crop cut
+into the dish. `npm run photos` names every one of these.
+
+The result is written as WebP at 340px and 540px: 99 photographs, 1.36 MB in
+total, about 7 KB each. The card well crops further to 3:2 on a phone, so two
+whole cards land in view instead of one and a half — which is why the crop is
+sized against the phone well, the tighter of the two.
 
 **The dish → photograph mapping is generated, not looked up at runtime.**
 `src/lib/menu/photos.ts` is written by the same script and keyed by where a dish

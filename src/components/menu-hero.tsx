@@ -21,7 +21,7 @@ export function MenuHero({ language }: { language: Language }) {
   const dictionary = dictionaries[language];
 
   return (
-    <section className="mx-auto flex max-w-[1040px] flex-col gap-4.5 px-4.5 pt-5.5 pb-5 sm:flex-row sm:items-end sm:justify-between sm:gap-12 sm:px-8 sm:pt-8.5 sm:pb-7">
+    <section className="mx-auto flex w-full max-w-[1040px] flex-col gap-4.5 px-4.5 pt-5.5 pb-5 sm:flex-row sm:items-end sm:justify-between sm:gap-12 sm:px-8 sm:pt-8.5 sm:pb-7">
       <div>
         <p className="eyebrow text-ink/72">{dictionary.city}</p>
         {dictionary.intro ? (

@@ -193,9 +193,14 @@ export function MenuBrowser({
         </div>
       </div>
 
+      {/* `w-full` is load-bearing: this is a flex item, and `mx-auto` on a flex
+          item makes it shrink to fit its content instead of stretching. It
+          used to be propped up to full width by the intrinsic width of a dish
+          photograph, which stopped being true once the photographs were taken
+          out of the flow. */}
       <main
         id="menu"
-        className="mx-auto max-w-[1040px] px-4.5 pb-1.5 sm:px-8"
+        className="mx-auto w-full max-w-[1040px] px-4.5 pb-1.5 sm:px-8"
         aria-busy={hasMore || undefined}
       >
         <div ref={bodyTop} />
