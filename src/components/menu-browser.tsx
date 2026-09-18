@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { DishCard } from "@/components/dish-card";
+import { SpreadRailCount } from "@/components/spread-rail-count";
 import { normalise, useSearchQuery } from "@/components/menu-filter-store";
 import { useHydrated } from "@/components/use-hydrated";
-import type { Category, Language } from "@/lib/i18n";
+import type { Category, Dictionary, Language } from "@/lib/i18n";
 import type { DishView, SectionView } from "@/lib/menu";
 
 /** Cards revealed at a time as the guest scrolls. */
@@ -43,6 +44,7 @@ export function MenuBrowser({
   otherCategories,
   sections,
   currency,
+  dictionary,
   strings,
 }: {
   language: Language;
@@ -50,6 +52,8 @@ export function MenuBrowser({
   otherCategories: { category: Category; label: string }[];
   sections: SectionView[];
   currency: string;
+  /** Handed down for the spread's controls, which sit inside the cards. */
+  dictionary: Dictionary;
   strings: {
     all: string;
     sections: string;
@@ -190,6 +194,13 @@ export function MenuBrowser({
               </Chip>
             ))}
           </div>
+
+          {/* The header has scrolled away by now, so the way back into the
+              spread comes with the rail. Outside the scrolling strip, so it
+              stays put while the chips scroll under the fade. */}
+          <div className="ms-auto flex shrink-0 items-center pe-3.5 sm:pe-0">
+            <SpreadRailCount dictionary={dictionary} />
+          </div>
         </div>
       </div>
 
@@ -244,6 +255,7 @@ export function MenuBrowser({
                     key={`${dish.name}-${dishIndex}`}
                     dish={dish}
                     currency={currency}
+                    dictionary={dictionary}
                     showSection={group.section === null}
                     priority={priority}
                   />

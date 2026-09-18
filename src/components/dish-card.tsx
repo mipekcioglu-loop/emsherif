@@ -1,5 +1,7 @@
-import { formatPrice } from "@/lib/i18n";
+import { formatPrice, type Dictionary } from "@/lib/i18n";
 import type { DishView } from "@/lib/menu";
+import { SpreadCard } from "@/components/spread-card";
+import { SpreadControl } from "@/components/spread-control";
 import { Wordmark } from "@/components/wordmark";
 
 /** The photo well's width in the three-column grid, and the two before it. */
@@ -17,18 +19,25 @@ const SIZES =
 export function DishCard({
   dish,
   currency,
+  dictionary,
   showSection = false,
   priority = false,
 }: {
   dish: DishView;
   currency: string;
+  dictionary: Dictionary;
   /** The sub-category kicker, shown only where the card is out of context. */
   showSection?: boolean;
   /** Skip lazy-loading — for the handful of cards above the fold. */
   priority?: boolean;
 }) {
   return (
-    <article className="bg-paper border-ink/15 hover:border-ink/28 flex flex-col overflow-hidden rounded-[5px] border transition-[box-shadow,border-color,transform] duration-[250ms] hover:-translate-y-0.5 hover:shadow-[0_16px_34px_-16px_color-mix(in_srgb,var(--color-ink)_34%,transparent)]">
+    /* `SpreadCard` only deepens the border once a dish is on the spread; the
+       card itself is still rendered on the server. */
+    <SpreadCard
+      dishKey={dish.key}
+      className="bg-paper border-ink/15 hover:border-ink/28 flex flex-col overflow-hidden rounded-[5px] border transition-[box-shadow,border-color,transform] duration-[250ms] hover:-translate-y-0.5 hover:shadow-[0_16px_34px_-16px_color-mix(in_srgb,var(--color-ink)_34%,transparent)]"
+    >
       {/* Shorter crop on a phone: two whole cards land in view instead of one
           and a half, which is a long scroll through 128 dishes. */}
       {/* `relative`, and the contents absolutely placed, because the well is a
@@ -84,11 +93,16 @@ export function DishCard({
 
         {/* Amount then currency, adjacent, as one object — reversed by
             direction in Arabic and Kurdish, never by a bidi override. */}
-        <p className="border-ink/8 mt-auto flex items-baseline justify-start gap-[5px] border-t pt-3.5 leading-[normal]">
-          <span className="price-amount">{formatPrice(dish.price)}</span>
-          <span className="price-currency text-ink/72">{currency}</span>
-        </p>
+        {/* The price lockup keeps the row's start; the control takes the empty
+            end it always had. Nothing above this line moves. */}
+        <div className="border-ink/8 mt-auto flex items-center justify-between gap-3 border-t pt-3.5">
+          <p className="flex items-baseline justify-start gap-[5px] leading-[normal]">
+            <span className="price-amount">{formatPrice(dish.price)}</span>
+            <span className="price-currency text-ink/72">{currency}</span>
+          </p>
+          <SpreadControl dishKey={dish.key} name={dish.name} dictionary={dictionary} />
+        </div>
       </div>
-    </article>
+    </SpreadCard>
   );
 }

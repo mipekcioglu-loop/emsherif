@@ -53,6 +53,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SOURCE = path.join(root, "photos/dishes");
 const OUT_IMAGES = path.join(root, "public/dishes");
 const OUT_MODULE = path.join(root, "src/lib/menu/photos.ts");
+const OUT_KEYS = path.join(root, "src/lib/menu/dish-keys.ts");
 
 /** The warm neutral every seamless is normalised onto — the photo well colour. */
 const TARGET = { r: 243, g: 242, b: 235 };
@@ -798,6 +799,211 @@ async function processPhoto(file, slug, report) {
  * Generated module
  * ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ *
+ * A dish identity the three languages share
+ * ------------------------------------------------------------------ */
+
+/**
+ * Rows that look pairable and are not the same dish.
+ *
+ * Step 3 below pairs the unphotographed leftovers by position, which is right
+ * almost everywhere: the three menus print the same dishes in the same order
+ * within a section. It is wrong wherever a menu carries a dish the others do
+ * not — the positions still line up, so nothing counts wrong, and if the two
+ * happen to cost the same the price check cannot see it either.
+ *
+ * That is exactly the case in Arabic hot drinks: the Arabic page prints a decaf
+ * espresso where English and Kurdish print Flat White
+ * (docs/menu-discrepancies.md §2), on the same row, both at 10,000. Paired by
+ * position, a guest who picked Flat White in English would find a decaf
+ * espresso on their table in Arabic — the wrong dish, not a missing one.
+ *
+ * So the rows are declared here instead. Each one states the name it expects,
+ * so a re-parse that shifts stops the run rather than silently pairing again.
+ * A dish listed here gets a key of its own, prefixed with its language, and is
+ * reported as being on only some of the menus.
+ */
+const UNPAIRED = {
+  "ar:drinks:4:6": "اسبريسو بدون كافيين",
+};
+
+/**
+ * "category:section:item" says where a dish sits in ONE language's menu. It is
+ * not an identity: the three printed menus order their sections differently,
+ * Kurdish swaps two food sections, and Arabic and Kurdish open their drinks
+ * with mocktails. `food:6:4` is a different dish in each language.
+ *
+ * Anything that needs to follow a dish across a language switch — the spread —
+ * needs a key that means the same dish everywhere. What already exists is the
+ * photograph slug, which the mapping above aligns across the three languages at
+ * build time. So the key is reconstructed from it:
+ *
+ *   1. Match each English section to its counterpart by the set of slugs the
+ *      two share. A section with no photographs at all has no slugs to go on,
+ *      so it falls back to item count and price multiset.
+ *   2. Inside a matched section, match items by slug.
+ *   3. Match what is left — the unphotographed dishes — by their position
+ *      within the section, which is the printed order.
+ *
+ * Every pairing is then checked by price, and a disagreement is reported rather
+ * than swallowed. The ones that remain are the eight already recorded in
+ * docs/menu-discrepancies.md §1 and §2, which is the evidence that the pairing
+ * is right: if the alignment were wrong, the prices would disagree in places
+ * that document does not know about.
+ *
+ * The key itself is the dish's English coordinates. That is a label, not a
+ * claim that English is primary — it just has to be one language's, and
+ * English is the one whose section order the other two are matched against.
+ */
+function buildDishKeys(perLanguage, report) {
+  const slugAt = (lang, cat, si, ii) => perLanguage[lang][key(cat, si, ii)] ?? null;
+  const slugsOf = (lang, cat, si) =>
+    MENUS[lang][cat].sections[si].items.map((_, ii) => slugAt(lang, cat, si, ii));
+
+  /** language -> its own "cat:s:i" -> the shared key. */
+  const keys = {};
+  for (const lang of Object.keys(MENUS)) keys[lang] = {};
+
+  for (const category of CATEGORIES) {
+    const english = englishMenu[category].sections;
+
+    for (const lang of Object.keys(MENUS)) {
+      const theirs = MENUS[lang][category].sections;
+      const usedSections = new Set();
+
+      english.forEach((enSection, si) => {
+        const enSlugs = slugsOf("en", category, si);
+        const enSet = new Set(enSlugs.filter(Boolean));
+
+        // 1. Which of this language's sections is this one?
+        let match = -1;
+        if (lang === "en") {
+          match = si;
+        } else {
+          let best = 0;
+          theirs.forEach((_, sj) => {
+            if (usedSections.has(sj)) return;
+            const overlap = slugsOf(lang, category, sj).filter(
+              (s) => s && enSet.has(s),
+            ).length;
+            if (overlap > best) {
+              best = overlap;
+              match = sj;
+            }
+          });
+          if (match < 0) {
+            // No photograph in common: go by size and by the prices printed.
+            const fingerprint = (items) =>
+              items
+                .map((i) => i.price)
+                .sort((a, b) => a - b)
+                .join(",");
+            const want = fingerprint(enSection.items);
+            theirs.forEach((section, sj) => {
+              if (usedSections.has(sj) || match >= 0) return;
+              if (
+                section.items.length === enSection.items.length &&
+                fingerprint(section.items) === want
+              ) {
+                match = sj;
+              }
+            });
+          }
+        }
+        if (match < 0) {
+          throw new Error(
+            `No ${lang} counterpart for the English section ${category}:${si} ` +
+              `"${enSection.title}". Add a photograph to it, or align it by hand.`,
+          );
+        }
+        usedSections.add(match);
+
+        // 2. Items by slug, then 3. the rest by printed order.
+        const theirSlugs = slugsOf(lang, category, match);
+        const taken = new Set();
+        const paired = new Map(); // English item index -> theirs
+
+        enSlugs.forEach((slug, ii) => {
+          if (!slug) return;
+          const ij = theirSlugs.findIndex((s, k) => s === slug && !taken.has(k));
+          if (ij < 0) return; // no counterpart in this language; reported below
+          taken.add(ij);
+          paired.set(ii, ij);
+        });
+
+        /** Declared as not-the-same-dish, so it never enters positional pairing. */
+        const unpairable = (l, sj, ij) => {
+          const want = UNPAIRED[`${l}:${key(category, sj, ij)}`];
+          if (want === undefined) return false;
+          const got = MENUS[l][category].sections[sj].items[ij].name;
+          if (got !== want) {
+            throw new Error(
+              `UNPAIRED expects "${want}" at ${l} ${key(category, sj, ij)} but the menu ` +
+                `now says "${got}". Check the row before letting this through.`,
+            );
+          }
+          return true;
+        };
+
+        const enLeft = enSlugs
+          .map((_, ii) => ii)
+          .filter((ii) => !paired.has(ii) && !unpairable("en", si, ii));
+        const theirLeft = theirSlugs
+          .map((_, ij) => ij)
+          .filter((ij) => !taken.has(ij) && !unpairable(lang, match, ij));
+        enLeft.forEach((ii, n) => {
+          if (theirLeft[n] === undefined) return;
+          paired.set(ii, theirLeft[n]);
+        });
+
+        for (const [ii, ij] of paired) {
+          keys[lang][key(category, match, ij)] = key(category, si, ii);
+        }
+        // A declared row is nobody else's dish, so it is its own identity.
+        theirSlugs.forEach((_, ij) => {
+          if (unpairable(lang, match, ij)) {
+            keys[lang][key(category, match, ij)] = `${lang}:${key(category, match, ij)}`;
+          }
+        });
+
+        // A dish this language prints and English does not, or the reverse.
+        if (enLeft.length !== theirLeft.length) {
+          report.dishKeyGaps.push(
+            `${category} "${enSection.title}": English has ${enSection.items.length} dishes, ` +
+              `${lang} has ${theirs[match].items.length} — ` +
+              `${Math.abs(enLeft.length - theirLeft.length)} cannot be paired`,
+          );
+        }
+      });
+    }
+  }
+
+  // Every pairing checked by price. A silent misalignment would show up here.
+  const disagreements = [];
+  const byKey = new Map();
+  for (const lang of Object.keys(MENUS)) {
+    for (const [slot, id] of Object.entries(keys[lang])) {
+      const [cat, s, i] = slot.split(":");
+      const item = MENUS[lang][cat].sections[Number(s)].items[Number(i)];
+      if (!byKey.has(id)) byKey.set(id, {});
+      byKey.get(id)[lang] = item;
+    }
+  }
+  for (const [id, per] of byKey) {
+    const prices = new Set(Object.values(per).map((i) => i.price));
+    if (prices.size > 1) {
+      disagreements.push(
+        `${id} ${per.en ? per.en.name : "(no English row)"} — ` +
+          Object.entries(per)
+            .map(([l, i]) => `${l} ${i.price.toLocaleString("en-US")}`)
+            .join(" / "),
+      );
+    }
+  }
+  report.dishKeyPrices = disagreements;
+  return { keys, byKey };
+}
+
 function moduleSource({ perLanguage }) {
   const entries = (map) =>
     Object.keys(map)
@@ -831,6 +1037,63 @@ ${Object.keys(MENUS)
 `;
 }
 
+function keysModuleSource(keys, onlyIn) {
+  const entries = (map) =>
+    Object.keys(map)
+      .sort()
+      .map((k) => `    "${k}": "${map[k]}",`)
+      .join("\n");
+
+  return `/**
+ * GENERATED by scripts/dish-photos.mjs — do not edit by hand.
+ *
+ * One identity per dish, shared by all three languages.
+ *
+ * "category:section:item" is where a dish sits in ONE language's menu, and the
+ * three menus order their sections differently — so the same coordinates mean
+ * different dishes in different languages. This maps each language's own
+ * coordinates to a key that means the same dish everywhere, so a guest can pick
+ * a dish in one language and still have it when they switch.
+ *
+ * The key is the dish's English coordinates. That is a label, not a statement
+ * that English is primary. It is worked out from the photograph slugs, which
+ * are aligned across the languages in the same script; see the comment on
+ * buildDishKeys there for how, and for why the price check is the evidence.
+ *
+ * Rebuild with \`npm run photos\`.
+ */
+import type { Language } from "@/lib/i18n";
+
+/** A dish's identity: opaque, stable across languages, safe to persist. */
+export type DishKey = string;
+
+/** This language's own "category:section:item" -> the shared key. */
+export const dishKeys: Record<Language, Readonly<Record<string, DishKey>>> = {
+${Object.keys(MENUS)
+  .map((language) => `  ${language}: {\n${entries(keys[language])}\n  },`)
+  .join("\n")}
+};
+
+/**
+ * The dishes one language prints and another does not, so a guest who picks one
+ * and switches language has nothing to switch to. \`languages\` lists the
+ * languages whose menu does carry it.
+ */
+export const dishKeysNotInEveryLanguage: Readonly<
+  Record<DishKey, { readonly name: string; readonly languages: readonly Language[] }>
+> = {
+${onlyIn
+  .map(
+    (o) =>
+      `  "${o.id}": { name: ${JSON.stringify(o.name)}, languages: [${o.languages
+        .map((l) => `"${l}"`)
+        .join(", ")}] },`,
+  )
+  .join("\n")}
+};
+`;
+}
+
 /* ------------------------------------------------------------------ *
  * Run
  * ------------------------------------------------------------------ */
@@ -840,6 +1103,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const index = JSON.parse(fs.readFileSync(path.join(SOURCE, "index.json"), "utf8"));
   const report = {
     verdicts: [],
+    dishKeyGaps: [],
+    dishKeyPrices: [],
     passedThrough: [],
     corrected: [],
     framed: [],
@@ -881,6 +1146,18 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
 
   fs.writeFileSync(OUT_MODULE, moduleSource(mapping));
+
+  // The identity the spread needs: one key per dish, shared by all three.
+  const { keys: dishKeys, byKey } = buildDishKeys(mapping.perLanguage, report);
+  const onlyIn = [...byKey.entries()]
+    .filter(([, per]) => Object.keys(per).length < Object.keys(MENUS).length)
+    .map(([id, per]) => {
+      const languages = Object.keys(MENUS).filter((l) => per[l]);
+      return { id, name: (per.en ?? per[languages[0]]).name, languages };
+    })
+    .sort((a, b) => a.id.localeCompare(b.id));
+  fs.writeFileSync(OUT_KEYS, keysModuleSource(dishKeys, onlyIn));
+  report.dishKeyOnlyIn = onlyIn;
 
   const dishes = CATEGORIES.reduce(
     (total, category) =>
@@ -948,6 +1225,28 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (heldFrames.length) {
     console.log(`\n${heldFrames.length} photographs held, in hand but on no card:`);
     for (const [file, why] of heldFrames) console.log(`  ${file} — ${why}`);
+  }
+  // The spread's dish identity. A gap here means a dish a guest can pick in one
+  // language and not in another, which is a decision, not a warning to ignore.
+  if (report.dishKeyOnlyIn?.length) {
+    console.log(
+      `\n${report.dishKeyOnlyIn.length} dishes are not on every menu, so they have ` +
+        `no counterpart to\n  switch to:`,
+    );
+    for (const o of report.dishKeyOnlyIn) {
+      console.log(`  ${o.name} — only in ${o.languages.join(", ")} (${o.id})`);
+    }
+  }
+  if (report.dishKeyGaps?.length) {
+    for (const line of report.dishKeyGaps) console.log(`  ${line}`);
+  }
+  if (report.dishKeyPrices?.length) {
+    console.log(
+      `\n${report.dishKeyPrices.length} dishes are priced differently between languages.\n` +
+        `  These should be exactly what docs/menu-discrepancies.md §1 and §2 record; a\n` +
+        `  dish here that is not in that document means the alignment is wrong:`,
+    );
+    for (const line of report.dishKeyPrices) console.log(`  ${line}`);
   }
   if (report.verdicts.length) {
     console.log(

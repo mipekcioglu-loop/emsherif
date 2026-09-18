@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { SpreadEntry } from "@/components/spread-entry";
 import { Wordmark } from "@/components/wordmark";
 import type { Category, Language } from "@/lib/i18n";
 import { categories, dictionaries, languageSwitchOrder } from "@/lib/i18n";
@@ -24,7 +25,11 @@ export function SiteHeader({
 
   return (
     <header className="bg-ink text-paper">
-      <div className="flex justify-end px-3.5 pt-2 sm:px-6 sm:pt-2.5">
+      {/* The language switch has always sat at the end of this row with the
+          start half empty; the spread's entry takes that space, so the header
+          gains no row and no height. */}
+      <div className="flex items-center justify-between gap-3 px-3.5 pt-2 sm:px-6 sm:pt-2.5">
+        <SpreadEntry dictionary={dictionary} />
         <nav
           aria-label={dictionary.chooseLanguage}
           className="border-paper/22 flex overflow-hidden rounded-full border"

@@ -287,9 +287,64 @@ JavaScript adds is layered on top of markup that already works:
 | The ⓘ opens the venue sheet                | It jumps to the same block in the footer          |
 | Search narrows the grid                    | The field is disabled, not a box that eats typing |
 | Back-to-top appears once you have scrolled | It is simply always there                         |
+| ⊕ on a card adds it to على السفرة          | The control is not rendered at all                |
 
 This is also why scroll pagination cannot break the static export: it holds back
 markup the browser already has rather than fetching more.
+
+على السفرة is the one row where "without" means "not there". A stepper that
+cannot step is worse than no stepper, so the controls render nothing until
+React has taken over — the `useHydrated` pattern — and a guest without
+JavaScript sees exactly the card the site has always shown.
+
+### على السفرة — the dishes a guest has picked
+
+A guest presses ⊕ beside a dish while they browse, the picks gather in one
+list, and they order from it. **It is not a cart.** Nothing is bought, nothing
+is sent, there is no checkout and no waiter-facing view; the list is the
+guest's own, for reading out at the table.
+
+- **The control** is a 32px ring at the end of a card's price row. Pressed, it
+  fills navy and becomes `[−][qty][+]`. The plus is the group's last child in
+  an end-aligned group, so **it does not move between the two states** — a
+  finger resting on it is always "one more", never "remove" — and the card is
+  the same height picked or not, so no row in the grid re-flows.
+- **The way in** sits in the empty half of the header's top row. It is there at
+  zero, outlined: hiding it until something is picked would make the feature
+  invisible to anyone who never notices a ⊕. Once something is on it, it fills
+  ivory and carries a count — the sum of the quantities, not the number of
+  lines. The header is not sticky, so the same count reappears at the end of
+  the filter rail once the header has scrolled away.
+- **The sheet** is a `<dialog>` opened with `showModal`, which is where the
+  focus trap, Esc and backdrop come from. Grouped Food → Sweets → Drinks and,
+  inside a group, in the order the dish is printed — never in the order it was
+  added, because a list that reshuffles has to be re-read from the top.
+- **The total** is computed from the prices in the language being read, so the
+  same four rows come to 65,000 in Arabic and 66,000 in English. That is not a
+  bug in the arithmetic; it is the printed menus disagreeing (see
+  [docs/menu-discrepancies.md](docs/menu-discrepancies.md) §1 and §2), and it
+  is why the figure is labelled approximate and carries a note saying the
+  café's own bill is the final word.
+- **It is kept in `sessionStorage`**, not `localStorage`, and dropped after four
+  hours. A spread belongs to one sitting: the next guest at that table scans on
+  their own phone and starts clean, and a menu that remembers what you nearly
+  ordered last week is uncanny rather than helpful.
+
+**Every string it adds is provisional in all three languages, English
+included** — see [docs/provisional-strings.md](docs/provisional-strings.md).
+The Kurdish name most of all.
+
+**The dish identity is generated.** `category:section:item` is where a dish
+sits in one language's menu, not what it is: the three menus order their
+sections differently, so the same coordinates are different dishes. Without a
+shared key, switching language would drop or rename what a guest had picked.
+`src/lib/menu/dish-keys.ts` is written by `npm run photos` alongside
+`photos.ts`, reconstructed from the photograph slugs that script already
+aligns, and every pairing is checked by price — the only disagreements that
+fall out are the eight already documented, which is the evidence it is right.
+Two dishes are not on every menu (English and Kurdish print Flat White where
+Arabic prints a decaf espresso); a guest who picks one and switches keeps the
+row, borrowed from the menu that does print it, rather than watching it vanish.
 
 ### Brand
 

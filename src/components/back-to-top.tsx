@@ -7,8 +7,15 @@ import { useSyncExternalStore } from "react";
  *
  * It is a link to the top of the document, so it works with no JavaScript at
  * all; what JavaScript adds is keeping it out of the way until the guest has
- * scrolled far enough to want it. In Arabic and Kurdish it moves to the bottom
- * left, which `end-*` does by itself.
+ * scrolled far enough to want it. In Arabic and Kurdish it mirrors by
+ * direction, which `start-*`/`end-*` do by themselves.
+ *
+ * **It sits in the bottom START corner on a phone.** It used to sit at the end,
+ * which is where the spread's control now is: at 390px 24 of that control's
+ * 30px fell under this button, so the last card in view could not be added to
+ * the table. Phone-only — from 640px the grid sits inside a 1040px measure and
+ * the button is out in the margin, clear of everything. At the start corner the
+ * only thing beneath it is the price, which is text rather than a target.
  */
 function subscribeToScroll(onChange: () => void) {
   window.addEventListener("scroll", onChange, { passive: true });
@@ -29,7 +36,7 @@ export function BackToTop({ label }: { label: string }) {
       <a
         href="#top"
         aria-label={label}
-        className={`back-to-top bg-ink text-paper fixed end-4 bottom-4.5 z-30 flex size-11 items-center justify-center rounded-full shadow-[0_8px_22px_-6px_color-mix(in_srgb,var(--color-ink)_55%,transparent)] transition-opacity duration-200 sm:end-5 sm:bottom-5 ${
+        className={`back-to-top bg-ink text-paper fixed start-4 bottom-4.5 z-30 flex size-11 items-center justify-center rounded-full shadow-[0_8px_22px_-6px_color-mix(in_srgb,var(--color-ink)_55%,transparent)] transition-opacity duration-200 sm:start-auto sm:end-5 sm:bottom-5 ${
           shown ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >

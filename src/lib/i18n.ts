@@ -36,7 +36,7 @@ export function isCategory(value: string): value is Category {
 export const venueFields = ["address", "hours", "telephone", "wifi"] as const;
 export type VenueField = (typeof venueFields)[number];
 
-type Dictionary = {
+export type Dictionary = {
   /** Language name in its own script, shown on the language switch. */
   endonym: string;
   dir: "ltr" | "rtl";
@@ -78,6 +78,40 @@ type Dictionary = {
   venueLabels: Record<VenueField, string>;
   venuePlaceholders: Record<VenueField, string>;
   footerLinks: { contact: string; about: string; website: string; blog: string };
+  /**
+   * على السفرة — the dishes a guest has picked while browsing, gathered in one
+   * list so they can order from it. Not a cart: nothing is bought and nothing
+   * is sent. Every one of these is provisional in all three languages,
+   * English included; see `provisionalKeys` and docs/provisional-strings.md.
+   *
+   * `{dish}` and `{n}` are filled by `fill()`.
+   */
+  spread: {
+    /** The feature's name, on the header entry and at the head of the sheet. */
+    name: string;
+    /** Accessible name for the entry, with and without a count. */
+    open: string;
+    openCount: string;
+    instruction: string;
+    emptyLead: string;
+    emptyBody: string;
+    /** Accessible names for the card control, by what the press will do. */
+    add: string;
+    more: string;
+    fewer: string;
+    remove: string;
+    /** Announced politely when a quantity changes. */
+    announce: string;
+    announceGone: string;
+    total: string;
+    charges: string;
+    totalNote: string;
+    clear: string;
+    clearConfirm: string;
+    clearYes: string;
+    clearNo: string;
+    back: string;
+  };
   backToTop: string;
   loadingMore: string;
   close: string;
@@ -85,7 +119,8 @@ type Dictionary = {
 
 /**
  * Strings written to hold the layout, awaiting a native Sorani reader and a
- * native Levantine-Arabic reader. **None of this is approved copy.** Do not
+ * native Levantine-Arabic reader — and, for the spread, the café's sign-off on
+ * the English too. **None of this is approved copy.** Do not
  * treat anything listed here as signed off, and do not add to the list without
  * adding it to docs/provisional-strings.md as well.
  *
@@ -95,7 +130,11 @@ type Dictionary = {
  * wording, set exactly as supplied.
  */
 export const provisionalKeys = {
+  /* Every string the spread adds is provisional in all three languages,
+     English included — none of it has been past the café. */
+  en: ["spread"],
   ar: [
+    "spread",
     "allergyLabel",
     "allergyBody",
     "venueLink",
@@ -113,6 +152,7 @@ export const provisionalKeys = {
     "close",
   ],
   ku: [
+    "spread",
     "intro",
     "allergyLabel",
     "allergyBody",
@@ -130,7 +170,7 @@ export const provisionalKeys = {
     "loadingMore",
     "close",
   ],
-} as const satisfies Record<"ar" | "ku", readonly (keyof Dictionary)[]>;
+} as const satisfies Record<Language, readonly (keyof Dictionary)[]>;
 
 export const dictionaries: Record<Language, Dictionary> = {
   en: {
@@ -182,6 +222,29 @@ export const dictionaries: Record<Language, Dictionary> = {
     backToTop: "Back to top",
     loadingMore: "Loading more dishes",
     close: "Close",
+    spread: {
+      name: "Our Table",
+      open: "Open our table",
+      openCount: "Open our table — {n} on it",
+      instruction: "Everything you have picked so far.",
+      emptyLead: "Nothing on the table yet.",
+      emptyBody:
+        "Press \u2295 beside a dish and it joins the table, ready for when you order.",
+      add: "Add {dish} to the table",
+      more: "One more {dish}",
+      fewer: "One fewer {dish}",
+      remove: "Take {dish} off the table",
+      announce: "{dish} — {n} on the table",
+      announceGone: "{dish} taken off the table",
+      total: "Approximate total",
+      charges: "Service 0% · VAT 0%",
+      totalNote: "A guide for you, not a bill. The café's own bill is the final word.",
+      clear: "Clear the table",
+      clearConfirm: "Clear the whole table?",
+      clearYes: "Clear it",
+      clearNo: "Keep it",
+      back: "Back to the menu",
+    },
   },
   ku: {
     endonym: "کوردی",
@@ -235,6 +298,34 @@ export const dictionaries: Record<Language, Dictionary> = {
     backToTop: "گەڕانەوە بۆ سەرەوە",
     loadingMore: "بارکردنی خواردنی زیاتر",
     close: "داخستن",
+    spread: {
+      /* PROVISIONAL, and the name most in need of a native Erbil speaker.
+         سفرە is the everyday Sorani word for the spread a family eats from, and
+         it keeps a family resemblance with the Arabic name. If a native speaker
+         finds it traditional or dated, the alternates are مێزی ئێمە (our table,
+         the furniture — neutral and modern) and the colloquial سفرەکەمان. */
+      name: "سفرەی ئێمە",
+      open: "کردنەوەی سفرەکەمان",
+      openCount: "کردنەوەی سفرەکەمان — {n} لەسەر سفرە",
+      instruction: "هەموو ئەوەی تا ئێستا هەڵتبژاردووە.",
+      emptyLead: "هێشتا هیچ لەسەر سفرە نییە.",
+      emptyBody:
+        "\u2295 لەتەنیشت هەر خواردنێک دابگرە تا بچێتە سەر سفرە، ئامادە بێت بۆ کاتی داواکردن.",
+      add: "{dish} بخە سەر سفرە",
+      more: "یەکێکی تر لە {dish}",
+      fewer: "یەکێک کەم لە {dish}",
+      remove: "{dish} لەسەر سفرە لابە",
+      announce: "{dish} — {n} لەسەر سفرە",
+      announceGone: "{dish} لەسەر سفرە لابرا",
+      total: "کۆی نزیکەیی",
+      charges: "خزمەتگوزاری 0% · باج 0%",
+      totalNote: "تەنها بۆ ئاگاداری، پسوولە نییە. پسوولەی کافێ ئەوەیە کە پەسەندە.",
+      clear: "سفرە بەتاڵ بکەرەوە",
+      clearConfirm: "هەموو سفرە بەتاڵ بکرێتەوە؟",
+      clearYes: "بەتاڵی بکەرەوە",
+      clearNo: "بیهێڵەوە",
+      back: "گەڕانەوە بۆ لیست",
+    },
   },
   ar: {
     endonym: "العربية",
@@ -285,6 +376,29 @@ export const dictionaries: Record<Language, Dictionary> = {
     backToTop: "العودة إلى الأعلى",
     loadingMore: "جارٍ تحميل المزيد",
     close: "إغلاق",
+    spread: {
+      /* The feature's name is the client's own words. */
+      name: "على السفرة",
+      open: "افتح على السفرة",
+      openCount: "افتح على السفرة — {n} على السفرة",
+      instruction: "كل ما اخترتموه حتى الآن.",
+      emptyLead: "لا شيء على السفرة بعد.",
+      emptyBody: "اضغط \u2295 عند أي صنف ليصعد إلى السفرة، فيكون جاهزًا عند الطلب.",
+      add: "أضف {dish} إلى السفرة",
+      more: "واحد إضافي من {dish}",
+      fewer: "واحد أقل من {dish}",
+      remove: "ارفع {dish} عن السفرة",
+      announce: "{dish} — {n} على السفرة",
+      announceGone: "رُفع {dish} عن السفرة",
+      total: "المجموع التقريبي",
+      charges: "الخدمة 0% · الضريبة 0%",
+      totalNote: "للاسترشاد فقط، وليست فاتورة. فاتورة المقهى هي المعتمدة.",
+      clear: "أفرغ السفرة",
+      clearConfirm: "إفراغ السفرة كلها؟",
+      clearYes: "أفرغها",
+      clearNo: "احتفظ بها",
+      back: "العودة إلى القائمة",
+    },
   },
 };
 

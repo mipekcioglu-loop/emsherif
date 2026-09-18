@@ -6,8 +6,9 @@ import { MenuBrowser } from "@/components/menu-browser";
 import { MenuHero } from "@/components/menu-hero";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { SpreadSheet } from "@/components/spread-sheet";
 import { categories, dictionaries, isCategory, isLanguage, languages } from "@/lib/i18n";
-import { getCategoryView } from "@/lib/menu";
+import { getCategoryView, getSpreadDishes } from "@/lib/menu";
 
 export function generateStaticParams() {
   return languages.flatMap((lang) => categories.map((category) => ({ lang, category })));
@@ -63,6 +64,7 @@ export default async function MenuPage({ params }: PageProps<"/[lang]/[category]
           .map((item) => ({ category: item, label: dictionary.categoryLabels[item] }))}
         sections={sections}
         currency={dictionary.currency}
+        dictionary={dictionary}
         strings={{
           all: dictionary.allFilter,
           sections: dictionary.sections,
@@ -73,6 +75,15 @@ export default async function MenuPage({ params }: PageProps<"/[lang]/[category]
 
       <SiteFooter language={lang} />
       <BackToTop label={dictionary.backToTop} />
+
+      {/* Mounted once. The header entry and the sticky-rail count both ask it
+          to open; the dishes are this language's own, in printed order, so the
+          sheet only ever filters and never sorts. */}
+      <SpreadSheet
+        dishes={getSpreadDishes(lang)}
+        dictionary={dictionary}
+        currency={dictionary.currency}
+      />
     </div>
   );
 }

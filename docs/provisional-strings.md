@@ -17,6 +17,42 @@ these strings for the approved ones around them.
 - The English allergy statement — the client's approved wording, set exactly as
   supplied.
 
+## The whole of على السفرة is provisional, English included
+
+Every string the spread feature adds — twenty of them, in all three languages —
+is provisional. This is the first part of the site where **the English is
+unapproved too**: the rest of the English is the client's own wording or the
+printed menu's, and this is neither. `provisionalKeys.en` exists for this and
+lists exactly one key, `spread`.
+
+The name to settle first is the **Kurdish**: **سفرەی ئێمە**. سفرە is the
+everyday Sorani word for the spread a family eats from and keeps a family
+resemblance with the Arabic. If a native Erbil speaker finds it traditional or
+dated, the alternates on offer are **مێزی ئێمە** (our table, the furniture —
+neutral and modern) and the colloquial **سفرەکەمان**. All three are in the code
+comment beside the string.
+
+The Arabic name **على السفرة** is the client's own and is not in question. The
+English is **Our Table**.
+
+The rest — the empty state, the aria labels, the live announcements, the total's
+caption and note, and the clearing question — are in `dictionaries.*.spread` in
+[`src/lib/i18n.ts`](../src/lib/i18n.ts), each in all three languages, and are
+listed there in one block rather than scattered.
+
+Two of them are worth a second look when they are reviewed:
+
+- **The total's note** — "A guide for you, not a bill. The café's own bill is
+  the final word." It is doing real work: the figure it sits under is computed
+  from the prices in the language being read, and those disagree between the
+  printed menus, so the same four dishes come to different totals in different
+  languages. If the café ever settles the price conflicts, this note can soften;
+  until then it should not.
+- **"Service 0% · VAT 0%"** — one caption line attached to the number, not a
+  column of rows, because a column of aligned amounts is a receipt and this is
+  not one. If the café ever charges service, this is the line that changes, and
+  the note above it needs rewriting at the same time.
+
 ## Check this one first
 
 `intro`, the Kurdish opening passage, is **the first thing a guest reads** and

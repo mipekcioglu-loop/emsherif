@@ -1,9 +1,10 @@
-import type { Category, Language } from "@/lib/i18n";
+import { categories, type Category, type Language } from "@/lib/i18n";
 import { withBasePath } from "@/lib/site-url";
 
 import { arabicMenu } from "./ar";
 import { englishMenu } from "./en";
 import { kurdishMenu } from "./ku";
+import { dishKeys, dishKeysNotInEveryLanguage, type DishKey } from "./dish-keys";
 import { dishPhotos, photoAspectRatio, photoWidths } from "./photos";
 import type { CategoryContent, MenuRegistry } from "./types";
 
@@ -64,6 +65,8 @@ export function getDishPhotograph(
 
 /** One dish, ready to render: the approved wording plus its photograph. */
 export type DishView = {
+  /** The dish's identity, the same in all three languages. */
+  key: DishKey;
   name: string;
   description?: string;
   price: number;
@@ -89,6 +92,7 @@ export function getCategoryView(language: Language, category: Category): Section
     id: `section-${sectionIndex + 1}`,
     title: section.title,
     dishes: section.items.map((item, itemIndex) => ({
+      key: dishKeys[language][`${category}:${sectionIndex}:${itemIndex}`],
       name: item.name,
       description: item.description,
       price: item.price,
@@ -98,4 +102,76 @@ export function getCategoryView(language: Language, category: Category): Section
   }));
 }
 
+/**
+ * Every dish in one language, flattened, in printed order within each category.
+ *
+ * This is what the spread's sheet renders from: it holds the picked dishes'
+ * keys, and needs a name, a price and a category for each. Flattening it here
+ * keeps the sheet a plain renderer — the array's order IS the printed order, so
+ * the list is stable and never sorted by when a dish was added.
+ */
+export type SpreadDish = {
+  key: DishKey;
+  name: string;
+  price: number;
+  category: Category;
+  /**
+   * Set when this menu does not print the dish and the row is borrowed from a
+   * menu that does — so the name can be marked up in the language it is
+   * actually written in.
+   */
+  foreign?: Language;
+};
+
+export function getSpreadDishes(language: Language): SpreadDish[] {
+  const out: SpreadDish[] = [];
+  for (const category of categories) {
+    menus[language][category].sections.forEach((section, sectionIndex) => {
+      section.items.forEach((item, itemIndex) => {
+        out.push({
+          key: dishKeys[language][`${category}:${sectionIndex}:${itemIndex}`],
+          name: item.name,
+          price: item.price,
+          category,
+        });
+      });
+    });
+  }
+
+  /*
+   * Two dishes are not on every menu: English and Kurdish print Flat White
+   * where the Arabic page prints a decaf espresso (docs/menu-discrepancies.md
+   * §2). A guest can pick one and then switch to the language that does not
+   * have it.
+   *
+   * Dropping the row would be the worst of the options — the dish would vanish
+   * from the list and from the total and then reappear on switching back, which
+   * reads as the menu losing things. So the row is kept and borrowed from a
+   * menu that does print it, in that language's own words. A Latin name in an
+   * Arabic list is odd, but it is true, and the guest can still count it and
+   * still take it off.
+   */
+  for (const [key, dish] of Object.entries(dishKeysNotInEveryLanguage)) {
+    if (dish.languages.includes(language)) continue;
+    const from = dish.languages[0];
+    const slot = Object.entries(dishKeys[from]).find(([, id]) => id === key)?.[0];
+    if (!slot) continue;
+    const [category, sectionIndex, itemIndex] = slot.split(":");
+    const item =
+      menus[from][category as Category].sections[Number(sectionIndex)].items[
+        Number(itemIndex)
+      ];
+    out.push({
+      key,
+      name: item.name,
+      price: item.price,
+      category: category as Category,
+      foreign: from,
+    });
+  }
+
+  return out;
+}
+
+export type { DishKey };
 export type { CategoryContent, MenuItem, MenuSection } from "./types";
