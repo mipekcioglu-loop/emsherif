@@ -1,6 +1,5 @@
 import { formatPrice, type Dictionary } from "@/lib/i18n";
 import type { DishView } from "@/lib/menu";
-import { SpreadCard } from "@/components/spread-card";
 import { SpreadControl } from "@/components/spread-control";
 import { Wordmark } from "@/components/wordmark";
 
@@ -32,12 +31,11 @@ export function DishCard({
   priority?: boolean;
 }) {
   return (
-    /* `SpreadCard` only deepens the border once a dish is on the spread; the
-       card itself is still rendered on the server. */
-    <SpreadCard
-      dishKey={dish.key}
-      className="bg-paper border-ink/15 hover:border-ink/28 flex flex-col overflow-hidden rounded-[5px] border transition-[box-shadow,border-color,transform] duration-[250ms] hover:-translate-y-0.5 hover:shadow-[0_16px_34px_-16px_color-mix(in_srgb,var(--color-ink)_34%,transparent)]"
-    >
+    /* The card stays a Server Component. Its border deepens once the dish is on
+       the spread, driven off the control's own state with `:has()` in
+       globals.css, so no card needs a subscription of its own to say something
+       the control already knows. */
+    <article className="dish-card bg-paper border-ink/15 hover:border-ink/28 flex flex-col overflow-hidden rounded-[5px] border transition-[box-shadow,border-color,transform] duration-[250ms] hover:-translate-y-0.5 hover:shadow-[0_16px_34px_-16px_color-mix(in_srgb,var(--color-ink)_34%,transparent)]">
       {/* Shorter crop on a phone: two whole cards land in view instead of one
           and a half, which is a long scroll through 128 dishes. */}
       {/* `relative`, and the contents absolutely placed, because the well is a
@@ -103,6 +101,6 @@ export function DishCard({
           <SpreadControl dishKey={dish.key} name={dish.name} dictionary={dictionary} />
         </div>
       </div>
-    </SpreadCard>
+    </article>
   );
 }

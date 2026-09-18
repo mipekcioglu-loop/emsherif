@@ -1,6 +1,8 @@
 "use client";
 
-import { add, fill, remove, useQuantity } from "@/lib/spread";
+import { useEffect, useRef, useState } from "react";
+
+import { MAX_QUANTITY, add, fill, remove, useQuantity } from "@/lib/spread";
 import { useHydrated } from "@/components/use-hydrated";
 import type { Dictionary } from "@/lib/i18n";
 import type { DishKey } from "@/lib/menu";
@@ -32,10 +34,31 @@ export function SpreadControl({
 }) {
   const hydrated = useHydrated();
   const quantity = useQuantity(dishKey);
+  /*
+   * The live region starts EMPTY and stays empty until this guest changes this
+   * dish. Rendering the "taken off the table" sentence up front put a false
+   * statement under all 128 cards in the accessibility tree — and because the
+   * grid inserts twelve cards at a time as the guest scrolls, some screen
+   * readers would read those fresh regions out, announcing removals for dishes
+   * nobody had touched.
+   */
+  const [announcement, setAnnouncement] = useState("");
+  const previous = useRef(quantity);
+  useEffect(() => {
+    if (previous.current === quantity) return;
+    previous.current = quantity;
+    setAnnouncement(
+      quantity > 0
+        ? fill(dictionary.spread.announce, { dish: name, n: quantity })
+        : fill(dictionary.spread.announceGone, { dish: name }),
+    );
+  }, [quantity, name, dictionary]);
+
   if (!hydrated) return null;
 
   const on = quantity > 0;
   const copy = dictionary.spread;
+  const full = quantity >= MAX_QUANTITY;
 
   return (
     <div className="spread-control" data-on={on ? "true" : "false"}>
@@ -68,7 +91,12 @@ export function SpreadControl({
       <button
         type="button"
         className="spread-cap spread-plus"
+        /* At the cap the button is not "one more" — it cannot do anything, and
+           a press that changes nothing and re-announces nothing is
+           indistinguishable from a dead control. */
         aria-label={fill(on ? copy.more : copy.add, { dish: name })}
+        disabled={full}
+        aria-disabled={full || undefined}
         onClick={() => add(dishKey)}
       >
         <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true">
@@ -83,11 +111,10 @@ export function SpreadControl({
       </button>
 
       {/* Politely announced, so a screen-reader guest hears the new quantity
-          rather than only the button's label. */}
+          rather than only the button's label. Empty until this guest changes
+          this dish. */}
       <span role="status" aria-live="polite" className="sr-only">
-        {on
-          ? fill(copy.announce, { dish: name, n: quantity })
-          : fill(copy.announceGone, { dish: name })}
+        {announcement}
       </span>
     </div>
   );

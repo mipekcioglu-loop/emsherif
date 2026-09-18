@@ -5,10 +5,12 @@ import { useEffect, useRef, useState } from "react";
 import { dictionaries, formatPrice, type Category, type Dictionary } from "@/lib/i18n";
 import type { SpreadDish } from "@/lib/menu";
 import {
+  MAX_QUANTITY,
   add,
   clear,
   fill,
   remove,
+  setKnownDishes,
   useOpenRequests,
   useQuantity,
   useSpread,
@@ -42,10 +44,19 @@ export function SpreadSheet({
   currency: string;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const confirmRef = useRef<HTMLButtonElement>(null);
   const requests = useOpenRequests();
   const spread = useSpread();
   const [confirming, setConfirming] = useState(false);
+  const [announcement, setAnnouncement] = useState("");
   const copy = dictionary.spread;
+
+  /* This build's dish keys. Anything in storage that is not one of them is from
+     an older build and cannot be drawn, so the store drops it rather than
+     counting a row the guest can neither see nor clear. */
+  useEffect(() => {
+    setKnownDishes(dishes.map((dish) => dish.key));
+  }, [dishes]);
 
   useEffect(() => {
     if (requests === 0) return;
@@ -54,14 +65,43 @@ export function SpreadSheet({
     dialog.showModal();
   }, [requests]);
 
+  /*
+   * Anything that removes the element a guest is standing on — a row reaching
+   * zero, the clear question replacing the button that raised it — drops focus
+   * onto <body>, and a keyboard guest is then Tabbing blind inside a modal.
+   * The sharp case is clearing: the question lapses after eight seconds, so
+   * they are hunting for a control on a timer. After every change that can
+   * remove a control, focus is put somewhere deliberate inside the dialog.
+   */
+  const restoreFocus = () => {
+    const dialog = dialogRef.current;
+    if (!dialog?.open) return;
+    const active = document.activeElement;
+    if (active && active !== document.body && dialog.contains(active)) return;
+    dialog.querySelector<HTMLElement>("button, [href], input, select, textarea")?.focus();
+  };
+
   // The question lapses rather than sitting there waiting to be answered.
   useEffect(() => {
     if (!confirming) return;
-    const timer = window.setTimeout(() => setConfirming(false), CONFIRM_MS);
+    // The button that raised the question has just been replaced, so send the
+    // guest straight to the answer rather than leaving them to find it.
+    confirmRef.current?.focus();
+    const timer = window.setTimeout(() => {
+      setConfirming(false);
+      requestAnimationFrame(() => restoreFocus());
+    }, CONFIRM_MS);
     return () => window.clearTimeout(timer);
   }, [confirming]);
 
   const picked = dishes.filter((dish) => (spread[dish.key] ?? 0) > 0);
+
+  /* After the commit, not inside the handler: the row that had focus is
+     unmounted by the render, so anything scheduled before it still sees the old
+     tree. */
+  useEffect(() => {
+    restoreFocus();
+  }, [picked.length, confirming]);
   const total = picked.reduce(
     (sum, dish) => sum + dish.price * (spread[dish.key] ?? 0),
     0,
@@ -102,6 +142,12 @@ export function SpreadSheet({
         </form>
       </div>
 
+      {/* The card-level live regions are behind the modal and inert, so the
+          sheet needs its own: a change made in here is otherwise silent. */}
+      <span role="status" aria-live="polite" className="sr-only">
+        {announcement}
+      </span>
+
       <div className="spread-sheet-body">
         {picked.length === 0 ? (
           <p className="font-display rtl:font-naskh text-ink/80 max-w-[34ch] text-[20px] leading-[1.5]">
@@ -121,6 +167,7 @@ export function SpreadSheet({
                     dish={dish}
                     dictionary={dictionary}
                     currency={currency}
+                    onChange={setAnnouncement}
                   />
                 ))}
               </ul>
@@ -158,9 +205,12 @@ export function SpreadSheet({
               <button
                 type="button"
                 className="spread-link"
+                ref={confirmRef}
                 onClick={() => {
                   clear();
                   setConfirming(false);
+                  setAnnouncement(copy.emptyLead);
+                  requestAnimationFrame(() => restoreFocus());
                 }}
               >
                 {copy.clearYes}
@@ -212,14 +262,24 @@ function SpreadRow({
   dish,
   dictionary,
   currency,
+  onChange,
 }: {
   dish: SpreadDish;
   dictionary: Dictionary;
   currency: string;
+  /** Told what happened, so the sheet can announce it and keep focus inside. */
+  onChange: (announcement: string) => void;
 }) {
   const quantity = useQuantity(dish.key);
   const copy = dictionary.spread;
   if (quantity <= 0) return null;
+  const full = quantity >= MAX_QUANTITY;
+  const say = (next: number) =>
+    onChange(
+      next > 0
+        ? fill(copy.announce, { dish: dish.name, n: next })
+        : fill(copy.announceGone, { dish: dish.name }),
+    );
 
   return (
     <li className="spread-row">
@@ -230,7 +290,10 @@ function SpreadRow({
           aria-label={fill(quantity === 1 ? copy.remove : copy.fewer, {
             dish: dish.name,
           })}
-          onClick={() => remove(dish.key)}
+          onClick={() => {
+            remove(dish.key);
+            say(quantity - 1);
+          }}
         >
           <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true">
             <path
@@ -247,7 +310,12 @@ function SpreadRow({
           type="button"
           className="spread-cap spread-plus"
           aria-label={fill(copy.more, { dish: dish.name })}
-          onClick={() => add(dish.key)}
+          disabled={full}
+          aria-disabled={full || undefined}
+          onClick={() => {
+            add(dish.key);
+            say(quantity + 1);
+          }}
         >
           <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true">
             <path
@@ -262,6 +330,11 @@ function SpreadRow({
       </div>
 
       <div className="min-w-0">
+        {/* The name alone is not enough for the dishes the menu prints twice. */}
+        {dish.duplicated ? (
+          <p className="eyebrow text-ink/72 mb-1">{dish.section}</p>
+        ) : null}
+
         {/* A dish this menu does not print keeps the language it is written in,
             so the browser sets and reads it correctly. */}
         <p
@@ -271,6 +344,14 @@ function SpreadRow({
         >
           {dish.name}
         </p>
+
+        {/* Both printings in the same section: the section says nothing, so
+            the printed description goes in, word for word. */}
+        {dish.sameSection && dish.description ? (
+          <p className="text-ink/72 mt-1 text-[12.5px] leading-[1.45]">
+            {dish.description}
+          </p>
+        ) : null}
         <p className="mt-1 flex items-baseline gap-[5px] leading-[normal]">
           <span className="price-amount text-[15px]">
             {formatPrice(dish.price * quantity)}

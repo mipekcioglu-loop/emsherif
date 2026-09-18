@@ -25,12 +25,49 @@ const VERSION = 1;
  * load rather than resumed.
  */
 const SITTING_MS = 4 * 60 * 60 * 1000;
-/** Nobody orders a hundred of anything, and three digits break the pill. */
+/**
+ * Nobody orders a hundred of anything, and the per-dish cell is sized for two
+ * digits: 34px, which a third digit overflows. The header's count is not the
+ * reason — it is a flexible cell and takes four digits at 360px without
+ * touching the language switch.
+ */
 export const MAX_QUANTITY = 99;
 
 export type Spread = Readonly<Record<DishKey, number>>;
 
 type Stored = { v: number; at: number; items: Record<DishKey, number> };
+
+/**
+ * The keys this build knows about.
+ *
+ * Anything else in storage is from a build before `dish-keys.ts` was last
+ * regenerated. It cannot be rendered — the sheet only draws dishes it can find
+ * — so counting it would put a number in the header for a row that is not
+ * there, and the Clear control lives inside the populated state, so the guest
+ * would have no way to get rid of it. They are dropped on read instead.
+ *
+ * Not reachable by a guest today. It becomes reachable the first time the keys
+ * are regenerated and deployed while somebody is holding a session less than
+ * four hours old.
+ */
+let known: ReadonlySet<DishKey> | null = null;
+
+/**
+ * Whoever knows the menu tells the store. Called with what this build can
+ * render; anything already loaded that is not in the list is pruned there and
+ * then, so it does not matter whether this runs before or after the first read.
+ */
+export function setKnownDishes(keys: readonly DishKey[]) {
+  known = new Set(keys);
+  if (!loaded) return;
+  const pruned: Record<string, number> = {};
+  let dropped = false;
+  for (const [id, qty] of Object.entries(state)) {
+    if (known.has(id)) pruned[id] = qty;
+    else dropped = true;
+  }
+  if (dropped) set(pruned);
+}
 
 const EMPTY: Spread = Object.freeze({});
 
@@ -71,6 +108,7 @@ function read(): Spread {
     }
     const items: Record<string, number> = {};
     for (const [id, qty] of Object.entries(parsed.items ?? {})) {
+      if (known && !known.has(id)) continue;
       const n = Math.floor(Number(qty));
       if (Number.isFinite(n) && n > 0) items[id] = Math.min(n, MAX_QUANTITY);
     }

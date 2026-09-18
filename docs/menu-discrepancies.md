@@ -181,6 +181,26 @@ and Kurdish both disambiguate — لحمة مشوية (بقري) / (غنم) and
 گۆشتی برژاو (گۆلك) / (بەرخ), i.e. beef and lamb. Only the descriptions tell
 them apart in English.
 
+**This one is worth putting to the café**, because it stopped being only a
+printing quirk. على السفرة shows a guest their own picks as a list of names and
+prices, and in English those two dishes arrive as:
+
+```
+Lahmeh Mechwiyeh   29,000
+Lahmeh Mechwiyeh   36,000
+```
+
+which is not a list anyone can order from. Every other duplicated name on the
+three menus is settled by showing the section it came from; these two are in the
+same section, so there is nothing to show. The sheet therefore prints the
+approved description underneath them — the only approved English wording that
+tells them apart — which works but is long for a row.
+
+The clean fix is a qualifier in the name, as the other two languages already
+have: **Lahmeh Mechwiyeh (Beef)** and **Lahmeh Mechwiyeh (Lamb)**, or whatever
+wording the café prefers. That is a change to the printed menu's words, so it is
+theirs to make, not ours. Until they do, the description stays.
+
 ## 4. Halloumi is described differently
 
 English says _sesame_; Arabic says عسل (_honey_). Kurdish follows the English.

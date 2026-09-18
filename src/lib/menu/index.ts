@@ -115,6 +115,16 @@ export type SpreadDish = {
   name: string;
   price: number;
   category: Category;
+  /** The printed section, carried for the rows that need disambiguating. */
+  section: string;
+  /**
+   * This menu prints this name more than once, so the name alone does not say
+   * which dish the row is. `sameSection` means the two printings are in the
+   * same section as well, and the section is no help either.
+   */
+  duplicated?: boolean;
+  sameSection?: boolean;
+  description?: string;
   /**
    * Set when this menu does not print the dish and the row is borrowed from a
    * menu that does — so the name can be marked up in the language it is
@@ -133,6 +143,8 @@ export function getSpreadDishes(language: Language): SpreadDish[] {
           name: item.name,
           price: item.price,
           category,
+          section: section.title,
+          description: item.description,
         });
       });
     });
@@ -166,8 +178,39 @@ export function getSpreadDishes(language: Language): SpreadDish[] {
       name: item.name,
       price: item.price,
       category: category as Category,
+      section: menus[from][category as Category].sections[Number(sectionIndex)].title,
+      description: item.description,
       foreign: from,
     });
+  }
+
+  /*
+   * Five English names, four Arabic and two Kurdish are printed twice. On a
+   * card that is fine — the guest is looking at the section they scrolled to,
+   * and at a photograph. In a list of picked dishes it is not: two rows reading
+   * "Shawarma Lahmeh" at two prices is a list a guest cannot order from.
+   *
+   * So a row whose name is not unique carries its section. That settles every
+   * one of them except English "Lahmeh Mechwiyeh", where both printings are in
+   * Masheweh and only the description tells them apart — beef Black Angus
+   * against lamb. Arabic and Kurdish print the qualifier in the name; the
+   * English menu does not (docs/menu-discrepancies.md §3). Those rows carry the
+   * printed description as well, word for word, because it is the only approved
+   * wording that distinguishes them.
+   */
+  const byName = new Map<string, SpreadDish[]>();
+  for (const dish of out) {
+    if (!byName.has(dish.name)) byName.set(dish.name, []);
+    byName.get(dish.name)!.push(dish);
+  }
+  for (const rows of byName.values()) {
+    if (rows.length < 2) continue;
+    for (const row of rows) {
+      row.duplicated = true;
+      row.sameSection = rows.some(
+        (other) => other !== row && other.section === row.section,
+      );
+    }
   }
 
   return out;

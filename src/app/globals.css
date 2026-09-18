@@ -60,9 +60,50 @@
     color: var(--color-paper);
   }
 
+  /*
+   * The ring has to contrast with what is BEHIND the element, not with the
+   * element's own text. `currentColor` confuses the two, and it was fine only
+   * while nothing inverted: على السفرة's controls swap ink and paper when they
+   * are active, and the ring then landed navy-on-navy on the header entry and
+   * ivory-on-ivory on a picked card's plus — 1.00:1, an invisible ring on a
+   * control a keyboard guest is standing on.
+   *
+   * The site has two surfaces. The page is ivory, so the ring is ink; inside a
+   * navy surface it is paper. `.bg-ink` is the class those surfaces already
+   * use, so nothing has to be kept in step by hand.
+   */
   :focus-visible {
-    outline: 2px solid currentColor;
+    outline: 2px solid var(--color-ink);
     outline-offset: 3px;
+  }
+
+  /*
+   * Descendants of a navy surface, not the navy elements themselves. An element
+   * that is navy while the page around it is ivory — the back-to-top button,
+   * the active filter chip, the category summary — wants the ink ring against
+   * the page, and giving it the paper one is how those three ended up with an
+   * invisible ring long before this feature existed.
+   */
+  .bg-ink :focus-visible {
+    outline-color: var(--color-paper);
+  }
+
+  /*
+   * The spread's controls are the one place a single colour cannot work: they
+   * invert when active, and a cap's ring sits partly inside the filled pill and
+   * partly out on the card, so whichever colour it is, half of it disappears.
+   *
+   * Two tones instead. The paper halo fills the offset gap and the ink ring
+   * sits outside it, so on navy the halo shows and on ivory the ring does —
+   * there is no surface where both vanish. It follows the border radius, so the
+   * round caps stay round.
+   */
+  .spread-cap:focus-visible,
+  .spread-entry:focus-visible,
+  .spread-rail-count:focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 3px var(--color-paper);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -412,11 +453,6 @@
        logical sides. */
     unicode-bidi: isolate;
   }
-
-  /* Reinforcement, never the only cue — the filled pill is the signal. */
-  .spread-picked {
-    border-color: color-mix(in oklab, var(--color-ink) 45%, transparent);
-  }
 }
 
 @layer components {
@@ -711,5 +747,14 @@
 
   .spread-link:hover {
     text-decoration-color: currentColor;
+  }
+}
+
+/* The picked card's border. In `utilities` on purpose: the card's own
+   `border-ink/15` is a utility, and the same rule in `components` loses to it
+   whatever its specificity — which is how it shipped doing nothing. */
+@layer utilities {
+  .dish-card:has(.spread-control[data-on="true"]) {
+    border-color: color-mix(in oklab, var(--color-ink) 45%, transparent);
   }
 }
